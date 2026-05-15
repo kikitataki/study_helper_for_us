@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>すべてのログ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+<body>
+    <h1>すべてのログ</h1>
+    
+    <a href="/" class="back-link">← メイン画面に戻る</a>
+    <ul id="log-list"></ul> 
+
+    <!-- 要約ボタン -->
+    <button id="summarize-btn" class="btn">AIで補完しながら修正する</button>
+
+    <button id="copy-btn" class="btn" style="display: none; margin-left: 10px; background-color: #4CAF50; color: white;">
+        結果をコピー
+    </button>
+
+    <!--結果を表示する場所 -->
+    <div id="summary-result" style="margin-top: 10px; padding: 10px; border-radius: 5px; background: #f4f4f4; min-height: 20px;"></div>
+
+    <script>
+        //ログの取得と表示
+        function fetchAndShowLogs() {
+            fetch('/api/logs')
+                .then(response => response.json())
+                .then(data => {
+                    const listElement = document.getElementById('log-list');
+                    listElement.innerHTML = '';
+                    data.forEach(log => {
+                        const li = document.createElement('li');
+                        li.textContent = log.timestamp + " - " + log.text;
+                        listElement.appendChild(li);
+                    });
+                });
+        }
+        setInterval(fetchAndShowLogs, 5000);
+        fetchAndShowLogs();
+
+        //補完機能
+        const summarizeBtn = document.getElementById('summarize-btn');
+        const copyBtn = document.getElementById('copy-btn'); 
+        const resultElement = document.getElementById('summary-result');
+
+        summarizeBtn.addEventListener('click', function() {
+            resultElement.textContent = "補完中..."; 
+            copyBtn.style.display = "none"; 
+            fetchSummaryFromPython();
+        });
+
+        function fetchSummaryFromPython() {
+            fetch('/api/youyaku')
+                .then(response => response.json())
+                .then(data => {
+                    resultElement.textContent = data.summary; 
+                    
+                    //追加: 要約が終わったらコピーボタンを表示する
+                    if(data.summary) {
+                        copyBtn.style.display = "inline-block";
+                    }
+                })
+                .catch(error => {
+                    console.error('エラー発生:', error);
+                    resultElement.textContent = "要約に失敗しました。";
+                });
+        }
+
+        //コピーボタンのクリックイベント
+        copyBtn.addEventListener('click', function() {
+            const textToCopy = resultElement.textContent;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // ボタンの文字を一時的に変えて「コピーした感」を出す
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = "コピー完了！";
+                copyBtn.style.backgroundColor = "#2e7d32"; // 少し暗い緑に
+
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.backgroundColor = "#4CAF50";
+                }, 2000);
+            }).catch(err => {
+                alert("コピーに失敗しました");
+            });
+        });
+    </script>
+</body>
+</html>

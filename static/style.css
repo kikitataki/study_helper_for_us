@@ -1,0 +1,100 @@
+
+/* 全体のフォントと背景 */
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    line-height: 1.6;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ヘッダー部分 */
+h1 {
+    border-left: 5px solid #007bff;
+    padding-left: 15px;
+    font-size: 1.5rem;
+    margin-top: 30px;
+}
+
+/* 実験用ボックス */
+div[style*="margin-top: 20px"] {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: none !important; /* インラインスタイルを上書き */
+    text-align: center;
+}
+
+/* リンクのボタン化 */
+a {
+    display: inline-block;
+    color: #007bff;
+    text-decoration: none;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+a:hover { text-decoration: underline; }
+
+/* リストのデザイン */
+ul {
+    list-style: none;
+    padding: 0;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+li {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+}
+li:last-child { border-bottom: none; }
+
+/* フォーム周り */
+form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+input[type="text"]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.2);
+}
+
+/* ボタンの共通設定 */
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+/* 追加ボタン（青） */
+form[action="/add_keyword"] button {
+    background-color: #007bff;
+    color: white;
+}
+form[action="/add_keyword"] button:hover { background-color: #0056b3; }
+
+/* 削除ボタン（赤） */
+form[action="/erase_keyword"] button {
+    background-color: #dc3545;
+    color: white;
+}
+form[action="/erase_keyword"] button:hover { background-color: #a71d2a; }
+
+/* 大事そうな文章（ログ）のスタイル */
+li { transition: background 0.2s; }
+li:hover { background-color: #f9f9f9; }
