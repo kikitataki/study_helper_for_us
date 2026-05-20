@@ -1,8 +1,8 @@
 from google import genai
 
 
-client = genai.Client(api_key="AIzaSyAAsT9lcFk9eQARdfUOU4V1d3RTkw5IQt8")
-
+client = genai.Client(api_key="")
+#まちがえてgithubにあげちゃったので、キーは無効化しました。本当に焦った。
 
 # print("--- あなたのキーで利用可能なモデル一覧 ---")
 # try:

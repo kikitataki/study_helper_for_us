@@ -1,10 +1,12 @@
-import speech_recognition as sr
-import threading # 追加: スレッドを使用するためのインポート
+import webbrowser
 from flask import Flask, render_template, request, redirect, url_for,jsonify
 from datetime import datetime
 from google import genai
 import os
 from dotenv import load_dotenv
+import threading
+import webbrowser
+import sys
 
 load_dotenv()
 
@@ -32,58 +34,6 @@ def activate_for_10_seconds():
     timer = threading.Timer(10.0, deactivate)
     timer.start()
 
-# 実行
-
-
-def listen_for_keyword():
-    
-    r = sr.Recognizer()
-    
-    with sr.Microphone() as source:
-        print("静聴中")
-        r.adjust_for_ambient_noise(source)
-        pre_st = "直前の文字列"
-        while True:
-            try:
-                now = datetime.now()
-                nowstr = now.strftime("%Y-%m-%d %H:%M:%S")
-                audio = r.listen(source)
-                text = r.recognize_google(audio, language="ja-JP")
-                print(f"認識されたテキスト: {text}")
-                alllogs.append({
-                    "timestamp": nowstr,
-                    "text": text
-                })
-                if active:
-                    display_logs.append({
-                        "timestamp": nowstr,
-                        "text": text
-                    })
-                    continue
-            
-                for word in keywords:
-                    if word in text:
-                        print(f"キーワード '{word}' が検出されました: {text}")
-                        if pre_st != "直前の文字列":
-                            display_logs.append({
-                                "timestamp": nowstr,
-                                "text": pre_st
-                            })
-                        display_logs.append({
-                            "timestamp": nowstr,
-                            "text": text
-                        })
-                        activate_for_10_seconds()
-                        break
-                pre_st = text
-                
-                
-                    
-            except sr.UnknownValueError:
-                print("音声を認識できませんでした")
-            except sr.RequestError as e:
-                print(f"APIエラー: {e}")
-                continue
 
 @app.route("/")
 def index():
@@ -149,14 +99,57 @@ def call_gemini_api(alllogs):
     return response.text
     
 
+@app.route('/send_voice', methods=['POST'])
+def receive_voice():
+    # 💡 送られてきた生のデータを「テキスト（文字列）」としてそのまま受け取る
+    spoken_text = request.get_data(as_text=True)
+    
+    print(f"ブラウザから届いた生の文字列: {spoken_text}")
+    if spoken_text == "":
+        print("文章を認識できませんでした")
+        return "Empty string received, ignoring.", 200
+    alllogs.append({"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "text": spoken_text})
+    return "Received", 200
+
+
+
 @app.route('/api/youyaku')
 def get_summary():
     
     summary = call_gemini_api(alllogs)
     return jsonify({"summary": summary})
 
+
+
+# 💡 Chromeを指定して開く関数
+def open_real_chrome():
+    url = "http://127.0.0.1:5000/"
+    try:
+        if sys.platform == "win32":
+            # 💡 Windowsにおける本物Google Chromeの「標準的なインストール先」を直接指定
+            chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"
+            
+            if os.path.exists(chrome_path):
+                # パスの後ろに %s をつけるのが、Pythonのwebbrowserで直接アプリを指定する時の決まり事です
+                webbrowser.get(f'"{chrome_path}" %s').open(url)
+                return # 起動に成功したらここで終了
+                
+        elif sys.platform == "darwin":
+            # Macの場合の本物のChromeの場所
+            webbrowser.get('open -a "Google Chrome" %s').open(url)
+            return
+
+        # 上記の直接指定が見つからなかった場合の保険（いつもの既定ブラウザ）
+        webbrowser.open(url)
+        
+    except Exception as e:
+        print(f"ブラウザ起動エラー: {e}")
+        webbrowser.open(url)
+
 if __name__ == "__main__":
-    listen_thread = threading.Thread(target=listen_for_keyword, daemon=True)
-    listen_thread.start()
-    app.run(debug=True, use_reloader=False)
+    # 0.5秒後に本物のChromeを開く
+    threading.Timer(0.5, open_real_chrome).start()
+    
+    # 2重起動を防ぐためデバッグはオフ
+    app.run(debug=False)
     
