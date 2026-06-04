@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Study For Us - 新規登録</title>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 30px;
+        background-color: #f5f5f5;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        box-sizing: border-box;
+      }
+
+      .register-container {
+        max-width: 420px;
+        margin: 60px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 24px;
+        color: #333;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: bold;
+        color: #555;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 18px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 15px;
+        box-sizing: border-box;
+      }
+
+      button {
+        width: 100%;
+        padding: 13px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      .small-text {
+        margin-top: 15px;
+        text-align: center;
+        font-size: 13px;
+        color: #777;
+      }
+
+      .small-text a {
+        color: #007bff;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="register-container">
+      <h1>新規登録申請</h1>
+
+      <label for="register-name">氏名（管理人が確認します）</label>
+      <input type="text" id="register-name" placeholder="例: 山田太郎" />
+
+      <label for="register-email">メールアドレス</label>
+      <input
+        type="email"
+        id="register-email"
+        placeholder="example@example.com"
+      />
+
+      <label for="register-password">パスワード</label>
+      <input
+        type="password"
+        id="register-password"
+        placeholder="パスワードを入力"
+      />
+
+      <button id="register-btn">登録申請を送信</button>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+      import {
+        getFirestore,
+        doc,
+        setDoc,
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+      // Firebase設定
+      const firebaseConfig = {
+        apiKey: "AIzaSyCFMBsujpkwA-vgccTSiGv4mfItaQt3rLs",
+        authDomain: "stady-for-us.firebaseapp.com",
+        projectId: "stady-for-us",
+        storageBucket: "stady-for-us.firebasestorage.app",
+        messagingSenderId: "984845838636",
+        appId: "1:984845838636:web:bafd664d3a55b063fda489",
+        measurementId: "G-DT7JCESQTD",
+      };
+
+      // Firebase起動
+      const app = initializeApp(firebaseConfig);
+
+      const db = getFirestore(app);
+
+      // 登録ボタン
+      document
+        .getElementById("register-btn")
+        .addEventListener("click", async () => {
+          const name = document.getElementById("register-name").value.trim();
+
+          const email = document.getElementById("register-email").value.trim();
+
+          const password = document.getElementById("register-password").value;
+
+          if (!name || !email || !password) {
+            alert("全部入力してください");
+            return;
+          }
+
+          try {
+            await setDoc(doc(db, "register_requests", email), {
+              name: name,
+              email: email,
+              password: password,
+              status: "pending",
+              createdAt: new Date(),
+            });
+
+            alert("登録完了しました！");
+
+            // 入力欄リセット
+            document.getElementById("register-name").value = "";
+            document.getElementById("register-email").value = "";
+            document.getElementById("register-password").value = "";
+
+            // ログイン画面へ戻すなら
+            window.location.href = "/";
+          } catch (error) {
+            console.error(error);
+
+            if (error.code === "auth/email-already-in-use") {
+              alert("このメールアドレスは既に使われています");
+            } else if (error.code === "auth/weak-password") {
+              alert("パスワードは6文字以上にしてください");
+            } else {
+              alert("登録に失敗しました");
+            }
+          }
+        });
+    </script>
+  </body>
+</html>

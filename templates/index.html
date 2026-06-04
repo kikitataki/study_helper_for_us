@@ -1,0 +1,2052 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>授業要約 ＆ 掲示板</title>
+    <link rel="apple-touch-icon" href="/icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <style>
+      #summary-box {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        white-space: pre-wrap;
+        line-height: 1.8; /* 行間を少し広げて読みやすく */
+        font-size: 15px;
+        letter-spacing: 0.03em;
+      }
+      /* 💡 1. 2. 3. などの大見出し（章タイトル）のデザイン */
+      .custom-heading {
+        font-size: 1.3em; /* 本文（15px）より30%大きく */
+        font-weight: bold;
+        color: #111;
+        margin-top: 25px; /* 上に少し余白を作る */
+        margin-bottom: 12px; /* 下の本文との隙間 */
+        padding-left: 8px;
+        border-left: 4px solid #007bff; /* 左側に青い縦線を入れてアクセントに */
+      }
+      /* 💡 **強調**（サイズ拡大＋太字＋マーカー） */
+      .custom-strong {
+        font-weight: bold;
+        font-size: 1.2em; /* 文字を20%大きく */
+        color: #222;
+        background: linear-gradient(
+          transparent 60%,
+          #fff3cd 60%
+        ); /* 優しいイエローのマーカー線 */
+        padding: 0 2px;
+      }
+
+      /* 💡 ~~打ち消し線~~（古い情報や訂正用） */
+      .custom-del {
+        color: #999;
+        text-decoration: line-through;
+        font-size: 0.9em;
+      }
+
+      /* 💡 - や * で始まる箇条書きを綺麗なリストマーク（・）にする */
+      .custom-list {
+        display: inline-block;
+        color: #007bff; /* 青色のドット */
+        font-weight: bold;
+        margin-right: 6px;
+        transform: scale(1.3);
+      }
+      body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        padding: 20px;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+      h1,
+      h2 {
+        font-size: 20px;
+        margin-bottom: 15px;
+      }
+      h2 {
+        font-size: 18px;
+        margin-top: 25px;
+        border-bottom: 2px solid #ccc;
+        padding-bottom: 5px;
+      }
+      label {
+        font-size: 14px;
+        font-weight: bold;
+        display: block;
+        margin-top: 15px;
+        margin-bottom: 5px;
+      }
+      select,
+      input[type="text"],
+      input[type="email"],
+      input[type="password"],
+      textarea {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      #summary-box {
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        white-space: pre-wrap;
+        line-height: 1.6;
+      }
+      .comment-item {
+        background-color: #fff;
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        margin-bottom: 10px;
+      }
+      .comment-user {
+        font-weight: bold;
+        font-size: 14px;
+        color: #555;
+      }
+      .comment-text {
+        margin-top: 5px;
+        font-size: 15px;
+        white-space: pre-wrap;
+      }
+
+      /* 🔒 ログイン画面用のシンプルなスタイル */
+      .login-container {
+        max-width: 400px;
+        margin: 60px auto;
+        padding: 30px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      .login-container h2 {
+        border: none;
+        margin-bottom: 20px;
+        font-size: 22px;
+      }
+      .combo-wrap {
+        position: relative;
+      }
+
+      .combo-input {
+        width: 100%;
+        background: #fff;
+        border: 1.5px solid #ccc;
+        border-radius: 10px;
+        font-size: 16px;
+        padding: 12px 42px 12px 14px;
+        outline: none;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        box-sizing: border-box;
+      }
+
+      .combo-input:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+      }
+
+      .combo-arrow {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        pointer-events: none;
+        color: #666;
+        transition: transform 0.2s;
+      }
+
+      .combo-wrap.open .combo-arrow {
+        transform: translateY(-50%) rotate(180deg);
+      }
+
+      .combo-list {
+        position: fixed; /* ← absoluteからfixedに変更 */
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        max-height: 240px;
+        overflow-y: auto;
+        z-index: 99999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15); /* 視認性向上 */
+      }
+
+      .combo-wrap.open .combo-list {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: all;
+      }
+
+      .combo-item {
+        padding: 12px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        font-size: 15px;
+      }
+
+      .combo-item:last-child {
+        border-bottom: none;
+      }
+
+      .combo-item:hover,
+      .combo-item.highlighted {
+        background: #f1f7ff;
+        color: #007bff;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 管理者設定の部分（基本的には無視でいい）  -->
+    <div id="admin-zone" style="display: none; margin-top: 20px">
+      <div
+        id="admin-notification-box"
+        style="
+          display: none;
+          background: #fff3cd;
+          border: 1px solid #ffeeba;
+          padding: 15px;
+          border-radius: 12px;
+          margin-bottom: 20px;
+        "
+      >
+        <div style="font-weight: bold; margin-bottom: 10px">
+          🔔 新規登録申請
+        </div>
+
+        <div id="admin-request-list">読み込み中...</div>
+      </div>
+      <button
+        id="admin-toggle-btn"
+        style="
+          background-color: #6c757d;
+          color: white;
+          width: 100%;
+          padding: 12px 15px;
+          font-size: 14px;
+          font-weight: bold;
+          border-radius: 12px;
+          border: none;
+          cursor: pointer;
+          text-align: left;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <span>管理者専用メニュー ＆ ユーザー管理</span>
+        <span id="admin-toggle-arrow">▼</span>
+      </button>
+
+      <div
+        id="admin-content"
+        style="
+          display: none;
+          background: #fff3cd;
+          padding: 15px;
+          border: 1px solid #ffeeba;
+          border-radius: 0 0 12px 12px;
+          margin-top: -2px;
+          box-sizing: border-box;
+        "
+      >
+        <div
+          style="
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+          "
+        >
+          <span
+            style="
+              font-size: 13px;
+              font-weight: bold;
+              display: block;
+              margin-bottom: 5px;
+            "
+            >＋ ユーザー新規登録・変更</span
+          >
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <input
+              type="email"
+              id="admin-user-email"
+              placeholder="メールアドレス (例: student1@example.com)"
+              style="
+                width: 100%;
+                padding: 8px;
+                font-size: 13px;
+                box-sizing: border-box;
+              "
+            />
+            <input
+              type="text"
+              id="admin-user-name"
+              placeholder="表示する名前 (例: 山田太郎)"
+              style="
+                width: 100%;
+                padding: 8px;
+                font-size: 13px;
+                box-sizing: border-box;
+              "
+            />
+            <button
+              id="admin-add-user-btn"
+              style="
+                width: 100%;
+                padding: 8px;
+                background: #28a745;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-weight: bold;
+                cursor: pointer;
+              "
+            >
+              ユーザーを登録・更新
+            </button>
+          </div>
+        </div>
+
+        <div
+          style="
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+          "
+        >
+          <span
+            style="
+              font-size: 13px;
+              font-weight: bold;
+              display: block;
+              margin-bottom: 5px;
+            "
+            >📋 登録済みユーザー一覧</span
+          >
+          <div
+            id="admin-user-list"
+            style="
+              max-height: 150px;
+              overflow-y: auto;
+              font-size: 13px;
+              display: flex;
+              flex-direction: column;
+              gap: 5px;
+            "
+          >
+            読み込み中...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ログイン画面  -->
+    <div id="login-box" style="display: none">
+      <div class="login-container">
+        <h2>授業ページ ログイン</h2>
+        <input
+          type="email"
+          id="login-email"
+          placeholder="登録したメールアドレス"
+        />
+        <input type="password" id="login-password" placeholder="パスワード" />
+        <button onclick="handleLogin()">ログイン</button>
+      </div>
+    </div>
+
+    <div id="register-link-box" style="margin-top: 15px; text-align: center">
+      <a href="https://stady-for-us.web.app/register.html">
+        新規登録はこちら
+      </a>
+    </div>
+
+    <!-- 授業選択画面  -->
+    <div id="app-content" style="display: none">
+      <h1>授業毎の要約 ＆ 掲示板</h1>
+
+      <label for="class-select">授業名</label>
+
+      <div class="combo-wrap" id="class-combo">
+        <input
+          class="combo-input"
+          id="class-select"
+          type="text"
+          placeholder="授業名を入力または選択"
+          autocomplete="off"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+        />
+
+        <svg
+          class="combo-arrow"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+
+        <ul class="combo-list" role="listbox" id="class-combo-list"></ul>
+      </div>
+
+      <label for="count-select">講義回数</label>
+      <select id="count-select" disabled>
+        <option value="">-- 先に授業名を選択してください --</option>
+      </select>
+
+      <div style="margin-top: 15px; margin-bottom: 15px">
+        <button
+          id="open-resources-btn"
+          style="
+            background-color: #ffffff;
+            color: #495057;
+            border: 1px solid #ced4da;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: background 0.2s;
+          "
+        >
+          <span style="flex: 1; text-align: left"
+            >授業資料・添付ファイルを確認する</span
+          >
+          <span style="color: #adb5bd; font-size: 12px">▶</span>
+        </button>
+      </div>
+
+      <!-- ファイル表示画面 -->
+      <div
+        id="resources-modal"
+        style="
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 9999;
+        "
+      >
+        <div
+          style="
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            max-height: 80%;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+          "
+        >
+          <div
+            style="
+              background: #c2a378;
+              color: white;
+              padding: 15px;
+              text-align: center;
+              font-size: 16px;
+              font-weight: bold;
+              border-radius: 20px 20px 0 0;
+              position: relative;
+            "
+          >
+            ファイル一覧
+            <button
+              id="close-resources-btn"
+              style="
+                position: absolute;
+                right: 20px;
+                top: 15px;
+                background: none;
+                border: none;
+                color: white;
+                font-size: 16px;
+                cursor: pointer;
+              "
+            >
+              ✕
+            </button>
+          </div>
+
+          <div
+            id="resources-list-container"
+            style="
+              padding: 20px;
+              overflow-y: auto;
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+              background: #fdfbf7;
+              flex: 1;
+            "
+          >
+            <div
+              style="
+                background: white;
+                border: 1px solid #dee2e6;
+                border-radius: 12px;
+                padding: 15px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+              "
+            >
+              <div
+                style="
+                  background: #e9ecef;
+                  border-radius: 50%;
+                  width: 40px;
+                  height: 40px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 20px;
+                "
+              >
+                📄
+              </div>
+              <div style="flex: 1">
+                <div style="font-size: 14px; font-weight: bold; color: #333">
+                  無料プランじゃ画像保存できなかった.pdf
+                </div>
+                <div style="font-size: 11px; color: #868e96; margin-top: 2px">
+                  (601KB)
+                </div>
+              </div>
+              <div style="font-size: 16px; color: #adb5bd">📥</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>みんなのデータから作成した要約</h2>
+
+      <div id="summary-box">
+        授業名と回数を選択すると、ここに要約が表示されます。
+      </div>
+
+      <div
+        id="mobile-patch-zone"
+        style="
+          margin-top: 20px;
+          padding: 15px;
+          background: #f8f9fa;
+          border: 1px solid #dee2e6;
+          border-radius: 12px;
+          box-sizing: border-box;
+        "
+      >
+        <button
+          id="delete-summary-btn"
+          style="display: none; margin-bottom: 10px; background: #dc3545"
+        >
+          この授業ページを削除
+        </button>
+        <p
+          style="
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: bold;
+            color: #495057;
+          "
+        >
+          📝 この講義ノートに追記・修正する
+        </p>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; width: 100%">
+          <input
+            type="text"
+            id="patch-input"
+            placeholder="追加したい板書、重要な補足、修正点を入力（Enterでも送信可）"
+            style="
+              flex: 1;
+              min-width: 280px;
+              padding: 10px;
+              border: 1px solid #ced4da;
+              border-radius: 6px;
+              font-size: 14px;
+              box-sizing: border-box;
+            "
+          />
+
+          <button
+            id="patch-submit-btn"
+            style="
+              padding: 10px 20px;
+              background: #007bff;
+              color: white;
+              border: none;
+              border-radius: 6px;
+              font-weight: bold;
+              cursor: pointer;
+              white-space: nowrap;
+            "
+          >
+            要望を送信
+          </button>
+        </div>
+        <small style="color: #6c757d; display: block; margin-top: 8px">
+          ※送信されたメモはFirestoreに一時保存され、次にローカル（PC環境）でこのページを開いた際、自動的にAIがノートへ統合します。
+        </small>
+      </div>
+
+      <!-- 画像挿入場所 -->
+      <div
+        style="
+          margin-top: 15px;
+          margin-bottom: 15px;
+          padding: 15px;
+          background-color: #f8f9fa;
+          border: 1px dashed #ced4da;
+          border-radius: 12px;
+          box-sizing: border-box;
+        "
+      >
+        <div
+          style="
+            font-size: 14px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          "
+        >
+          <span>➕</span> <span>新しい資料・画像を追加する</span>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 15px;
+            flex-wrap: wrap;
+          "
+        >
+          <input type="file" id="file-input" style="display: none" />
+          <button
+            type="button"
+            onclick="document.getElementById('file-input').click()"
+            style="
+              background: #6c757d;
+              color: white;
+              border: none;
+              border-radius: 6px;
+              padding: 10px 18px;
+              font-size: 13px;
+              font-weight: bold;
+              cursor: pointer;
+              white-space: nowrap;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            "
+          >
+            ファイルを選択
+          </button>
+
+          <span
+            id="file-name-display"
+            style="
+              font-size: 13px;
+              color: #6c757d;
+              font-weight: 500;
+              min-width: 150px;
+              max-width: 300px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            "
+          >
+            選択されていません
+          </span>
+
+          <button
+            id="upload-file-btn"
+            style="
+              background: #cccccc;
+              color: white;
+              border: none;
+              border-radius: 6px;
+              padding: 10px 24px;
+              font-size: 13px;
+              font-weight: bold;
+              cursor: pointer;
+              white-space: nowrap;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            "
+            disabled
+          >
+            追加
+          </button>
+        </div>
+      </div>
+
+      <h2>みんなのコメント</h2>
+      <div id="comments-container">
+        授業名と回数を選択すると、コメントが表示されます。
+      </div>
+
+      <!-- コメントの場所 -->
+      <div id="comment-form" style="display: none; margin-top: 15px">
+        <input
+          type="text"
+          id="comment-username"
+          placeholder="名前（ニックネーム）"
+        />
+        <textarea
+          id="comment-input"
+          rows="3"
+          placeholder="補足情報やメモをここに書き込めます"
+        ></textarea>
+        <button id="comment-submit">コメントを投稿する</button>
+      </div>
+    </div>
+
+    <script type="module">
+      //インポートできるscript的な
+
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"; //firebaseを呼ぶ関数
+      //必要な奴だけもってくる
+      import {
+        getFirestore,
+        doc,
+        collection,
+        getDoc,
+        getDocs,
+        setDoc,
+        addDoc,
+        deleteDoc,
+        query,
+        serverTimestamp,
+        orderBy,
+        where,
+        updateDoc,
+        increment,
+        arrayUnion,
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+      import {
+        //ログイン関連の道具
+        getAuth,
+        onAuthStateChanged,
+        signInWithEmailAndPassword,
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+      import {
+        //ファイル保存に必要な関数（未実施）
+        getStorage,
+        ref,
+        uploadBytes,
+        getDownloadURL,
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCFMBsujpkwA-vgccTSiGv4mfItaQt3rLs",
+        authDomain: "stady-for-us.firebaseapp.com",
+        projectId: "stady-for-us",
+        storageBucket: "stady-for-us.firebasestorage.app",
+        messagingSenderId: "984845838636",
+        appId: "1:984845838636:web:bafd664d3a55b063fda489",
+        measurementId: "G-DT7JCESQTD",
+      };
+
+      const app = initializeApp(firebaseConfig); //firebase起動
+      const db = getFirestore(app); //firestore起動
+      const auth = getAuth(app); //ログイン関連起動
+      const storage = getStorage(app); //firebasestorageの起動（ファイル系統の保存につかう）
+
+      //htmlのidで初期化する
+      const classSelect = document.getElementById("class-select");
+      const countSelect = document.getElementById("count-select");
+      const summaryBox = document.getElementById("summary-box");
+      const commentsContainer = document.getElementById("comments-container");
+      const commentForm = document.getElementById("comment-form");
+      const fileInput = document.getElementById("file-input");
+      const uploadFileBtn = document.getElementById("upload-file-btn");
+      const fileNameDisplay = document.getElementById("file-name-display");
+
+      //ファイル挿入等でのイベント
+      fileInput.addEventListener("change", () => {
+        //ファイルがあったときの操作
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+
+          fileNameDisplay.textContent = file.name;
+
+          uploadFileBtn.disabled = false;
+          uploadFileBtn.style.background = "#007bff";
+        }
+      });
+
+      uploadFileBtn.addEventListener("click", async () => {
+        /* ファイルダウンロードを試みたが、無料では厳しかったので削除
+        try {
+          const file = fileInput.files[0];
+
+          if (!file) {
+            alert("ファイルを選択してください");
+            return;
+          }
+
+          const className = classSelect.value;
+          const lectureCount = countSelect.value;
+
+          if (!className || !lectureCount) {
+            alert("授業と講義回数を選択してください");
+            return;
+          }
+
+          // Storage保存場所
+          const storageRef = ref(
+            storage,
+            `resources/${className}/${lectureCount}/${Date.now()}_${file.name}`,
+          );
+
+          // ファイルアップロード
+          await uploadBytes(storageRef, file);
+
+          // URL取得
+          const downloadURL = await getDownloadURL(storageRef);
+
+          // Firestoreへ保存
+          await addDoc(collection(db, "resources"), {
+            className: className,
+            lectureCount: lectureCount,
+            fileName: file.name,
+            url: downloadURL,
+            createdAt: serverTimestamp(),
+          });
+
+          alert("アップロード成功");
+        } catch (error) {
+          console.error(error);
+
+          if (
+            error.message.includes("CORS") ||
+            error.message.includes("storage")
+          ) {
+            alert("無料プランではStorageが使えませんでした。");
+          } else {
+            alert("アップロード失敗");
+          }
+        }
+          */
+        alert("無料プランではStorageが使えませんでした。");
+      });
+
+      let currentSelectedDocId = null; //選択している授業名
+
+      //localかどうかの判定(bool値)
+      const isLocalhost =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1";
+
+      //認証＆初期起動コントロールのメインロジック
+      const ADMIN_EMAIL = "konankonan@test.com"; //管理者メールアドレス
+      document.getElementById("app-content").style.display = "none";
+      document.getElementById("admin-zone").style.display = "none";
+
+      if (isLocalhost) {
+        console.log(
+          "Flask（ローカル環境）：セキュリティ担保のため、裏で認証状態をチェックします。",
+        );
+      } else {
+        console.log(
+          "📱 本番環境（Firebase Hosting）：認証状態をチェックします。",
+        );
+      }
+
+      //ログイン関連
+      onAuthStateChanged(auth, async (user) => {
+        // auth（認証状態から）user情報を取得する
+        if (user) {
+          try {
+            // 🔥 追加：認証トークンの復元完了まで待つ
+            await user.getIdToken();
+
+            // nullじゃない→認証済み
+            document.getElementById("register-link-box").style.display = "none";
+
+            console.log("ログイン認証済み:", user.email);
+
+            document.getElementById("login-box").style.display = "none";
+
+            document.getElementById("app-content").style.display = "block";
+
+            // 管理者なら
+            if (user.email === ADMIN_EMAIL) {
+              console.log("⚡ 管理者としてログインしました");
+
+              document.getElementById("admin-zone").style.display = "block";
+
+              document.getElementById("delete-summary-btn").style.display =
+                "block";
+
+              // 🔄 アコーディオンの開閉イベントを追加
+              const toggleBtn = document.getElementById("admin-toggle-btn");
+
+              const adminContent = document.getElementById("admin-content");
+
+              const toggleArrow = document.getElementById("admin-toggle-arrow");
+
+              if (toggleBtn && !toggleBtn.dataset.listenerAdded) {
+                toggleBtn.addEventListener("click", () => {
+                  if (adminContent.style.display === "none") {
+                    adminContent.style.display = "block";
+
+                    toggleArrow.textContent = "▲";
+
+                    toggleBtn.style.borderRadius = "12px 12px 0 0";
+                  } else {
+                    adminContent.style.display = "none";
+
+                    toggleArrow.textContent = "▼";
+
+                    toggleBtn.style.borderRadius = "12px";
+                  }
+                });
+
+                toggleBtn.dataset.listenerAdded = "true";
+              }
+
+              await loadAllUsers();
+
+              await loadRegisterRequests();
+            }
+
+            // 🔥 最後に起動
+            startYourApp();
+          } catch (error) {
+            console.error("認証復元エラー:", error);
+
+            alert("認証状態の復元に失敗しました");
+          }
+        } else {
+          document.getElementById("register-link-box").style.display = "block";
+
+          console.log(
+            "未ログイン状態です。メイン画面を隠し、ログインを要求します。",
+          );
+
+          document.getElementById("app-content").style.display = "none";
+
+          document.getElementById("admin-zone").style.display = "none";
+
+          document.getElementById("login-box").style.display = "block";
+        }
+      });
+
+      //メールアドレスからユーザー名を取得するヘルパー関数
+      async function getUserName(email) {
+        if (!email) return "ゲスト";
+        try {
+          // users コレクションから、ドキュメントIDが「email」のものを直接取得
+          const userDocRef = doc(db, "users", email);
+          const userSnap = await getDoc(userDocRef);
+
+          if (userSnap.exists()) {
+            return userSnap.data().name; // 登録されている名前を返す
+          } else {
+            return email; // 万が一登録がなければ、メールアドレスをそのまま表示
+          }
+        } catch (error) {
+          console.error("ユーザー名取得エラー:", error);
+          return email;
+        }
+      }
+
+      //全登録ユーザーを読み込んで一覧表示する関数
+      //asyncは一旦やれるとこまでやって面倒なやつはあとでやる関数
+      //awaitは結果がきたら再開する感じの場所
+      async function loadAllUsers() {
+        const userListContainer = document.getElementById("admin-user-list");
+        if (!userListContainer) return;
+
+        userListContainer.innerHTML = "";
+        try {
+          const querySnapshot = await getDocs(collection(db, "users")); //データ集
+          //dbのusersデータをとってくる
+          if (querySnapshot.empty) {
+            userListContainer.textContent = "登録されたユーザーはいません。";
+            return;
+          }
+
+          querySnapshot.forEach((userDoc) => {
+            //拡張for文てきなもの(単体がuserDoc)
+            const email = userDoc.id; // ドキュメントIDがメアド
+            const data = userDoc.data();
+            const name = data.name || "名前なし";
+
+            const row = document.createElement("div"); //一時的なdivを作成
+            row.style.cssText = //css情報
+              "display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #eee;";
+            row.innerHTML = `
+                        <span><strong>${name}</strong> <small style="color:#6c757d;">(${email})</small></span>
+                        <button onclick="deleteUserFromAdmin('${email}')" style="width: auto; padding: 2px 8px; font-size: 11px; background-color: #dc3545; border-radius: 4px; margin: 0;">削除</button>
+                    `;
+            userListContainer.appendChild(row); //divの中に挿入する
+          });
+        } catch (error) {
+          console.error("ユーザー一覧取得エラー:", error);
+          userListContainer.textContent = "一覧の取得に失敗しました。";
+        }
+      }
+      //Firebaseから申請一覧を読み込み、htmlに反映するまで
+      async function loadRegisterRequests() {
+        const box = document.getElementById("admin-notification-box");
+        const list = document.getElementById("admin-request-list");
+
+        try {
+          //登録ユーザー情報のドキュメントを取得する
+          const querySnapshot = await getDocs(
+            collection(db, "register_requests"),
+          );
+          if (querySnapshot.empty) {
+            box.style.display = "none";
+            return;
+          }
+          //表示させる
+          box.style.display = "block";
+
+          list.innerHTML = "";
+
+          querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+
+            const row = document.createElement("div");
+
+            row.style.cssText = `
+        padding:10px;
+        background:white;
+        border-radius:8px;
+        margin-bottom:10px;
+        border:1px solid #ddd;
+      `;
+
+            row.innerHTML = `
+        <div><strong>${data.name}</strong></div>
+        <div style="font-size:13px;color:#666;">
+          ${data.email}
+        </div>
+
+        <button
+          onclick="approveUser('${data.email}')"
+          style="
+            margin-top:10px;
+            background:#28a745;
+            border:none;
+            color:white;
+            padding:8px 12px;
+            border-radius:6px;
+            cursor:pointer;
+          "
+        >
+          承認
+        </button>
+
+        <button
+  onclick="rejectUser('${data.email}')"
+  style="
+    margin-top:10px;
+    margin-left:10px;
+    background:#dc3545;
+    border:none;
+    color:white;
+    padding:8px 12px;
+    border-radius:6px;
+    cursor:pointer;
+  "
+>
+  拒否
+</button>
+      `;
+
+            list.appendChild(row);
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      }
+      window.rejectUser = async function (email) {
+        if (!confirm(`${email} の申請を拒否しますか？`)) return;
+
+        try {
+          await deleteDoc(doc(db, "register_requests", email));
+
+          alert("申請を拒否しました");
+
+          loadRegisterRequests();
+        } catch (error) {
+          console.error(error);
+
+          alert("拒否に失敗しました");
+        }
+      };
+
+      window.approveUser = async function (email) {
+        try {
+          const requestRef = doc(db, "register_requests", email);
+
+          const requestSnap = await getDoc(requestRef);
+
+          if (!requestSnap.exists()) {
+            alert("申請データが存在しません");
+            return;
+          }
+
+          const data = requestSnap.data();
+
+          // Flask側へ「Auth作成」を依頼
+          const response = await fetch("/approve_user", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: data.email,
+              password: data.password,
+            }),
+          });
+
+          const result = await response.json();
+          /*
+          if (!result.success) {
+            alert("Auth登録失敗");
+            console.error(result.error);
+            return;
+          }
+
+          */
+          // Firestore usersへ登録
+          await setDoc(doc(db, "users", email), {
+            name: data.name,
+            email: data.email,
+            createdAt: new Date(),
+          });
+
+          // 申請削除
+          await deleteDoc(requestRef);
+
+          alert("承認しました");
+
+          loadRegisterRequests();
+          loadAllUsers();
+        } catch (error) {
+          console.error(error);
+          alert("承認失敗");
+        }
+      };
+
+      //管理者がユーザーを追加・更新する処理
+      document
+        .getElementById("admin-add-user-btn")
+        .addEventListener("click", async () => {
+          //イベントリスナー
+          const emailInput = document.getElementById("admin-user-email");
+          const nameInput = document.getElementById("admin-user-name");
+          //入力部分の抽出
+          const email = emailInput.value;
+          const name = nameInput.value;
+
+          if (!email || !name) {
+            alert("メールアドレスと名前の両方を入力してください。");
+            return;
+          }
+
+          try {
+            // ドキュメントIDをメールアドレスにして保存（既にあれば上書き、なければ新規作成）
+            await setDoc(doc(db, "users", email), {
+              name: name,
+            });
+
+            alert(`ユーザー「${name}」を登録・更新しました。`);
+
+            // 入力欄をクリアして一覧をリロード
+            emailInput.value = "";
+            nameInput.value = "";
+            await loadAllUsers();
+
+            // もしコメントエリアが表示されていれば、名前を最新にするために再読込
+            if (currentSelectedDocId) {
+              await loadComments(currentSelectedDocId);
+            }
+          } catch (error) {
+            console.error("ユーザー登録エラー:", error);
+            alert("ユーザーの登録に失敗しました。");
+          }
+        });
+
+      // ===================================================
+      //管理者がユーザーを削除する関数
+      window.deleteUserFromAdmin = async function (email) {
+        //windowでブラウザ全体のグローバル関数
+        if (
+          !confirm(
+            `本当にこのユーザー (${email}) の登録を削除しますか？\n削除するとコメント欄にはメールアドレスがそのまま表示されるようになります。`,
+          )
+        )
+          return;
+
+        try {
+          await deleteDoc(doc(db, "users", email));
+          alert("ユーザー登録を削除しました。");
+
+          // 一覧とコメント欄をリロード
+          await loadAllUsers();
+          if (currentSelectedDocId) {
+            await loadComments(currentSelectedDocId);
+          }
+        } catch (error) {
+          console.error("ユーザー削除エラー:", error);
+          alert("ユーザーの削除に失敗しました。");
+        }
+      };
+
+      //ログインボタンが押された時の処理
+      window.handleLogin = async function () {
+        const email = document.getElementById("login-email").value.trim();
+        const pass = document.getElementById("login-password").value;
+
+        if (!email || !pass) {
+          alert("メールアドレスとパスワードを入力してください。");
+          return;
+        }
+
+        try {
+          // Firebase Authでログイン
+          const userCredential = await signInWithEmailAndPassword(
+            auth,
+            email,
+            pass,
+          );
+
+          // usersコレクション確認
+          const userDocRef = doc(db, "users", email);
+
+          const userSnap = await getDoc(userDocRef);
+
+          // usersに存在しない → 未承認
+          if (!userSnap.exists()) {
+            alert("管理者の承認待ちです。");
+
+            await auth.signOut();
+
+            return;
+          }
+
+          alert("ログインに成功しました！");
+        } catch (error) {
+          console.error("ログインエラー:", error);
+
+          alert("メールアドレスまたはパスワードが違います。");
+        }
+      };
+
+      //独自文法（マークダウン風）をHTMLタグにいい感じに変換する関数（AI丸投げ）
+      function formatSummaryText(rawText) {
+        if (!rawText) return "";
+
+        let formatted = rawText;
+
+        // 1. **強調** ➔ 大きい文字＋太字＋マーカー
+        formatted = formatted.replace(
+          /\*\*(.*?)\*\*/g,
+          '<span class="custom-strong">$1</span>',
+        );
+
+        // 2. ~~打ち消し~~ ➔ 打ち消し線
+        formatted = formatted.replace(
+          /~~(.*?)~~/g,
+          '<span class="custom-del">$1</span>',
+        );
+
+        // 3. 行頭の「- 」や「* 」 ➔ オシャレなリストドットに変換
+        formatted = formatted.replace(
+          /^[-\*]\s/gm,
+          '<span class="custom-list">•</span> ',
+        );
+
+        // ✨【新機能】行頭の「1. 」「2. 」などの数字 ➔ 丸ごとオシャレな大見出しに変換
+        // （行頭(^)にある 数字とドットと半角スペース から、その行の終わり($)までを丸ごと置換）
+        formatted = formatted.replace(
+          /^(\d+\.\s.*)$/gm,
+          '<div class="custom-heading">$1</div>',
+        );
+
+        return formatted;
+      }
+
+      //PC環境かつ保留中の修正データがあれば自動統合する関数
+      async function checkAndRunPendingPatches(docId) {
+        const isLocal =
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1";
+        if (!isLocal) return; //スマホ（本番環境）なら終了
+
+        try {
+          //保留中の修正データがあるか検索
+          const q = query(
+            collection(db, "summary_pending_requests"),
+            where("docId", "==", docId),
+          );
+          const querySnapshot = await getDocs(q);
+          if (querySnapshot.empty) return;
+
+          summaryBox.textContent =
+            "スマホからの修正要望を検知したため、AIがノートを再統合中...";
+
+          let patchTexts = [];
+          let deleteDocPromises = [];
+
+          querySnapshot.forEach((document) => {
+            patchTexts.push(document.data().text);
+            deleteDocPromises.push(
+              deleteDoc(doc(db, "summary_pending_requests", document.id)),
+            );
+          });
+
+          const combinedPatchText = patchTexts.join("\n");
+
+          // PC環境での自動検知時に、新しく作ったAI修正API（/api/patch_summary）を叩く
+          const response = await fetch("/api/patch_summary", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              className: docId.split("_")[0],
+              classCount: docId.split("_")[1],
+              additionalText: combinedPatchText, // 溜まっていた「修正の指示（プロンプトへのインプット）」
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.status === "success") {
+            await Promise.all(deleteDocPromises); // 成功したら一時保存の指示データを削除（お掃除）
+            console.log("保留データの削除が完了しました。");
+            loadSummaryData(); // 画面を再読み込みして、AIが新しく作り直したノートを表示
+          }
+        } catch (error) {
+          console.error("自動統合エラー:", error);
+        }
+      }
+
+      //修正するシステム
+      document
+        .getElementById("patch-submit-btn")
+        .addEventListener("click", async () => {
+          const patchInput = document.getElementById("patch-input");
+          const patchSubmitBtn = document.getElementById("patch-submit-btn");
+          const text = patchInput.value.trim();
+
+          const currentClass = document.getElementById("class-select").value;
+          const currentCount = document.getElementById("count-select").value;
+
+          if (!text) return alert("追加・修正したいメモを入力してください");
+          if (!currentClass || !currentCount)
+            return alert("授業を選択してからメモを送信してください");
+
+          const docId = `${currentClass}_${currentCount}`;
+
+          try {
+            patchSubmitBtn.disabled = true;
+            patchSubmitBtn.textContent = "保存中...";
+
+            // ⭕ 正しい変数「text」と「new Date()」を使って保存する
+            await addDoc(collection(db, "summary_pending_requests"), {
+              docId: docId,
+              text: text,
+              userEmail: auth.currentUser.email,
+              createdAt: new Date(),
+            });
+
+            alert(
+              `「${currentClass} 第${currentCount}回」の修正要望を一時保存しました！`,
+            );
+            patchInput.value = "";
+          } catch (e) {
+            console.error(e);
+            alert("一時保存に失敗しました。");
+          } finally {
+            patchSubmitBtn.disabled = false;
+            patchSubmitBtn.textContent = "要望を送信";
+          }
+        });
+
+      function startYourApp() {
+        classSelect.addEventListener("change", updateCountSelect);
+        countSelect.addEventListener("change", loadSummaryData);
+        setupClassSelect();
+      }
+      // 要約データとコメント一覧を読み込む
+      async function loadSummaryData() {
+        const selectedClass = classSelect.value;
+        const selectedCount = countSelect.value;
+
+        if (!selectedClass || !selectedCount) return;
+
+        summaryBox.textContent = "読み込み中...";
+        commentsContainer.textContent = "コメントを読み込み中...";
+        commentForm.style.display = "block";
+
+        const docId = `${selectedClass}_${selectedCount}`;
+        currentSelectedDocId = docId; // 👈 ここで現在のIDを覚えさせる！
+        await checkAndRunPendingPatches(docId);
+
+        try {
+          // 1. 要約の取得
+          const docRef = doc(db, "class_logs_summary", docId);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const rawSummary =
+              docSnap.data().summary || "要約データが空っぽです。";
+
+            // 💡 ここでカスタム装飾関数を噛ませる！
+            summaryBox.innerHTML = formatSummaryText(rawSummary);
+          } else {
+            summaryBox.textContent = "データが見つかりませんでした。";
+          }
+
+          // 2. コメントの取得
+          await loadComments(docId);
+        } catch (error) {
+          console.error(error);
+          summaryBox.textContent = "エラーが発生しました。";
+        }
+      }
+      async function setupClassSelect() {
+        try {
+          const querySnapshot = await getDocs(
+            collection(db, "class_logs_summary"),
+          );
+
+          const classNameSet = new Set();
+
+          querySnapshot.forEach((docItem) => {
+            const data = docItem.data();
+
+            if (data.className) {
+              classNameSet.add(data.className);
+            }
+          });
+
+          const classNames = Array.from(classNameSet);
+
+          window.allClassNames = classNames;
+          setupComboBox();
+        } catch (error) {
+          console.error("授業名取得エラー:", error);
+        }
+      }
+      function setupComboBox() {
+        const wrap = document.getElementById("class-combo");
+        const input = document.getElementById("class-select");
+        const list = document.getElementById("class-combo-list");
+
+        let hiIdx = -1;
+
+        function render(items) {
+          list.innerHTML = "";
+          hiIdx = -1;
+
+          if (items.length === 0) {
+            list.innerHTML = '<li class="combo-item">候補がありません</li>';
+            return;
+          }
+
+          items.forEach((item, i) => {
+            const li = document.createElement("li");
+
+            li.className = "combo-item";
+
+            li.textContent = item;
+
+            function selectItem(item) {
+              input.value = item;
+
+              close();
+
+              updateCountSelect();
+            }
+
+            li.addEventListener("mousedown", (e) => {
+              e.preventDefault();
+              selectItem(item);
+            });
+
+            li.addEventListener("touchstart", (e) => {
+              e.preventDefault();
+              selectItem(item);
+            });
+
+            list.appendChild(li);
+          });
+        }
+
+        function open() {
+          const q = input.value.trim();
+          const filtered = q
+            ? window.allClassNames.filter((v) => v.includes(q))
+            : window.allClassNames;
+          render(filtered);
+
+          // input の位置を取得して list を直下に配置
+          const rect = input.getBoundingClientRect();
+          list.style.top = rect.bottom + window.scrollY + "px";
+          list.style.left = rect.left + "px";
+          list.style.width = rect.width + "px";
+
+          wrap.classList.add("open");
+        }
+
+        function close() {
+          wrap.classList.remove("open");
+        }
+
+        input.addEventListener("focus", open);
+        input.addEventListener("touchstart", () => {
+          setTimeout(open, 50); // スマホタップ時に少し遅らせて開く
+        });
+        input.addEventListener("input", () => {
+          open();
+          updateCountSelect();
+        });
+
+        input.addEventListener("blur", () => {
+          setTimeout(close, 400);
+        });
+
+        input.addEventListener("keydown", (e) => {
+          const items = list.querySelectorAll(".combo-item");
+
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+
+            hiIdx = Math.min(hiIdx + 1, items.length - 1);
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+
+            hiIdx = Math.max(hiIdx - 1, 0);
+          } else if (e.key === "Enter" && hiIdx >= 0) {
+            e.preventDefault();
+
+            input.value = items[hiIdx].textContent;
+
+            close();
+
+            updateCountSelect();
+
+            return;
+          }
+
+          items.forEach((el, i) => {
+            el.classList.toggle("highlighted", i === hiIdx);
+          });
+        });
+      }
+
+      async function updateCountSelect() {
+        const selectedClass = classSelect.value;
+
+        countSelect.innerHTML =
+          '<option value="">-- 回数を選択してください --</option>';
+        countSelect.disabled = true;
+        summaryBox.textContent =
+          "授業名と回数を選択すると、ここに要約が表示されます。";
+        commentsContainer.textContent =
+          "授業名と回数を選択すると、コメントが表示されます。";
+        commentForm.style.display = "none";
+
+        if (!selectedClass) return;
+
+        try {
+          const q = query(
+            collection(db, "class_logs_summary"),
+            where("className", "==", selectedClass),
+          );
+          const querySnapshot = await getDocs(q);
+
+          const counts = [];
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.classCount !== undefined) {
+              counts.push(Number(data.classCount));
+            }
+          });
+
+          counts.sort((a, b) => a - b);
+
+          counts.forEach((count) => {
+            const option = document.createElement("option");
+            option.value = count;
+            option.textContent = `第 ${count} 回`;
+            countSelect.appendChild(option);
+          });
+
+          if (counts.length > 0) {
+            countSelect.disabled = false;
+          } else {
+            countSelect.innerHTML =
+              '<option value="">データが存在しません</option>';
+          }
+        } catch (error) {
+          console.error("回数取得エラー:", error);
+        }
+      }
+
+      // ===================================================
+      // 💬 コメントを読み込んで表示する関数
+      // ===================================================
+      async function loadComments(docId) {
+        commentsContainer.innerHTML = "";
+        try {
+          const commentsRef = collection(
+            db,
+            "class_logs_summary",
+            docId,
+            "comments",
+          );
+          const q = query(commentsRef, orderBy("createdAt", "asc"));
+          const querySnapshot = await getDocs(q);
+
+          if (querySnapshot.empty) {
+            commentsContainer.textContent =
+              "まだコメントはありません。最初の補足を残しよう！";
+            return;
+          }
+
+          // 👑 現在ログインしているユーザーが管理者かどうかをチェック
+          const currentUser = auth.currentUser;
+          const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+
+          // 順番に非同期でデータベースから「本名」を取得するため、ここだけ for...of に変更
+          for (const docSnap of querySnapshot.docs) {
+            const data = docSnap.data();
+            const commentId = docSnap.id; // 削除時に必要なドキュメントID
+
+            // 📝 保存されている「入力されたニックネーム」を取得
+            const displayedName =
+              data.inputName || data.userName || "名無しさん";
+            // 🔐 保存されている「投稿者のメールアドレス」を取得
+            const commenterEmail = data.userEmail || "guest@example.com";
+
+            // 👤 表示する名前を定義する変数
+            let userDisplayName = displayedName;
+
+            // 👑 もし「管理者」としてログインしているなら、表示を拡張する
+            if (isAdmin) {
+              // データベース（usersコレクション）から登録された本名（例: 佐藤）を取得
+              const realName = await getUserName(commenterEmail);
+
+              // 既に対象のメアドがユーザー登録されていれば「佐藤」、なければ「名無しさん」にする
+              const resolvedRealName =
+                realName !== commenterEmail ? realName : "名無しさん";
+
+              // 🏷️ 管理者用フォーマット： tmp（佐藤:メールアドレス） に整形
+              userDisplayName = `${displayedName}（${resolvedRealName}:${commenterEmail}）`;
+            }
+
+            const item = document.createElement("div");
+            item.className = "comment-item";
+            item.style.position = "relative"; // ボタンを右端に配置するため
+
+            // 👑 管理者のときだけ削除ボタンのHTMLを生成する
+            const deleteButtonHtml = isAdmin
+              ? `<button onclick="deleteComment('${docId}', '${commentId}')" 
+                                   style="position: absolute; right: 15px; top: 10px; width: auto; padding: 4px 10px; font-size: 12px; background-color: #dc3545; border-radius: 4px; margin: 0;">
+                               削除
+                           </button>`
+              : "";
+
+            // 👤 生成した名前（一般ならニックネームのみ、管理者なら特定情報付き）を表示
+            item.innerHTML = `
+    <div class="comment-user">👤 ${userDisplayName}</div>
+
+    <div class="comment-text">${data.text}</div>
+
+    <div style="
+      margin-top:10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    ">
+      <button
+        onclick="likeComment('${docId}', '${commentId}')"
+        style="
+          width:auto;
+          padding:6px 12px;
+          font-size:13px;
+          background:#f1f3f5;
+          color:#333;
+          border-radius:20px;
+        "
+      >
+        👍 いいね
+      </button>
+
+      <span style="font-size:13px;color:#666;">
+        ${data.likes || 0} いいね
+      </span>
+    </div>
+
+    ${deleteButtonHtml}
+`;
+            commentsContainer.appendChild(item);
+          }
+        } catch (err) {
+          console.error(err);
+          commentsContainer.textContent = "コメントの読み込みに失敗しました。";
+        }
+      }
+      window.likeComment = async function (docId, commentId) {
+        try {
+          const user = auth.currentUser;
+
+          if (!user) {
+            alert("ログインが必要です");
+            return;
+          }
+
+          const commentRef = doc(
+            db,
+            "class_logs_summary",
+            docId,
+            "comments",
+            commentId,
+          );
+
+          const commentSnap = await getDoc(commentRef);
+
+          if (!commentSnap.exists()) {
+            alert("コメントが存在しません");
+            return;
+          }
+
+          const data = commentSnap.data();
+
+          // 既にいいね済みなら停止
+          if (data.likedUsers && data.likedUsers.includes(user.email)) {
+            alert("既にいいねしています");
+            return;
+          }
+
+          // likes +1
+          await updateDoc(commentRef, {
+            likes: increment(1),
+            likedUsers: arrayUnion(user.email),
+          });
+
+          // 再読み込み
+          await loadComments(docId);
+        } catch (error) {
+          console.error(error);
+          alert("いいね失敗");
+        }
+      };
+      // 【管理者限定】特定のコメントを削除する関数
+      window.deleteComment = async function (docId, commentId) {
+        // 誤操作防止の確認ダイアログ
+        if (!confirm("このコメントを本当に削除しますか？")) return;
+
+        try {
+          // Firestoreのサブコレクション内の特定のコメントドキュメントを指すリファレンスを作成
+          const commentRef = doc(
+            db,
+            "class_logs_summary",
+            docId,
+            "comments",
+            commentId,
+          );
+
+          // Firestoreから削除を実行！
+          await deleteDoc(commentRef);
+
+          alert("コメントを削除しました。");
+
+          // 画面のコメント一覧をリロードして最新にする
+          await loadComments(docId);
+        } catch (error) {
+          console.error("コメント削除エラー:", error);
+          alert("削除に失敗しました。権限がないか、通信エラーです。");
+        }
+      };
+      //  一般コメントの投稿
+      document
+        .getElementById("comment-submit")
+        .addEventListener("click", async () => {
+          const commentInput = document.getElementById("comment-input");
+          const usernameInput = document.getElementById("comment-username"); // 👈 追加
+          const text = commentInput.value.trim();
+          const inputName = usernameInput.value.trim() || "名無しさん"; // 👈 空なら「名無しさん」にする
+
+          if (!text) return alert("コメントを入力してください。");
+
+          const selectedClass = classSelect.value;
+          const selectedCount = countSelect.value;
+          if (!selectedClass || !selectedCount)
+            return alert("授業を選択してください。");
+          const docId = `${selectedClass}_${selectedCount}`;
+
+          try {
+            const commentsRef = collection(
+              db,
+              "class_logs_summary",
+              docId,
+              "comments",
+            );
+
+            await addDoc(commentsRef, {
+              userEmail: auth.currentUser.email,
+              inputName: inputName,
+              text: text,
+              createdAt: new Date(),
+
+              likes: 0,
+              likedUsers: [],
+            });
+
+            // 投稿後にLocalStorageに名前を保存（次回自動入力用）
+            localStorage.setItem("chat_user_name", inputName);
+
+            commentInput.value = "";
+            await loadComments(docId);
+          } catch (error) {
+            console.error("投稿エラー:", error);
+            alert("投稿に失敗しました。");
+          }
+        });
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const savedName = localStorage.getItem("chat_user_name");
+        if (savedName)
+          document.getElementById("comment-username").value = savedName;
+      });
+
+      // 資料一覧モーダルの開閉コントロール
+      document
+        .getElementById("open-resources-btn")
+        .addEventListener("click", () => {
+          // 授業と回数が選ばれているか一応チェック
+          const currentClass = document.getElementById("class-select").value;
+          const currentCount = document.getElementById("count-select").value;
+          if (!currentClass || !currentCount) {
+            alert("先に授業名と講義回数を選択してください。");
+            return;
+          }
+          document.getElementById("resources-modal").style.display = "block";
+        });
+
+      document
+        .getElementById("close-resources-btn")
+        .addEventListener("click", () => {
+          document.getElementById("resources-modal").style.display = "none";
+        });
+
+      // モーダルの外側の黒い背景をクリックしても閉じるようにする
+      document
+        .getElementById("resources-modal")
+        .addEventListener("click", (e) => {
+          if (e.target === document.getElementById("resources-modal")) {
+            document.getElementById("resources-modal").style.display = "none";
+          }
+        });
+
+      async function loadResources(className, lectureCount) {
+        const container = document.getElementById("resources-list-container");
+
+        // 一旦空にする
+        container.innerHTML = "";
+
+        try {
+          // Firestore検索
+          const q = query(
+            collection(db, "resources"),
+            where("className", "==", className),
+            where("lectureCount", "==", lectureCount),
+          );
+
+          const querySnapshot = await getDocs(q);
+
+          // データ0件
+          if (querySnapshot.empty) {
+            container.innerHTML = "<p>まだ資料はありません。</p>";
+            return;
+          }
+
+          // 1件ずつ取り出す
+          querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+
+            // div生成
+            const item = document.createElement("div");
+
+            item.style.cssText = `
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        cursor: pointer;
+      `;
+
+            item.innerHTML = `
+        <div style="
+          background: #e9ecef;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 20px;
+        ">
+          📄
+        </div>
+
+        <div style="flex:1;">
+          <div style="
+            font-size:14px;
+            font-weight:bold;
+            color:#333;
+          ">
+            ${data.fileName}
+          </div>
+        </div>
+
+        <div style="
+          font-size:16px;
+          color:#adb5bd;
+        ">
+          📥
+        </div>
+      `;
+
+            // クリックで開く
+            item.addEventListener("click", () => {
+              window.open(data.url, "_blank");
+            });
+
+            container.appendChild(item);
+          });
+        } catch (error) {
+          console.error("資料取得エラー:", error);
+
+          container.innerHTML = "<p>資料の読み込みに失敗しました。</p>";
+        }
+      }
+      document
+        .getElementById("delete-summary-btn")
+        .addEventListener("click", async () => {
+          const selectedClass = classSelect.value;
+          const selectedCount = countSelect.value;
+
+          if (!selectedClass || !selectedCount) {
+            alert("授業を選択してください");
+            return;
+          }
+
+          const docId = `${selectedClass}_${selectedCount}`;
+
+          if (
+            !confirm(
+              `本当に「${selectedClass} 第${selectedCount}回」を削除しますか？`,
+            )
+          ) {
+            return;
+          }
+
+          try {
+            // =========================
+            // コメント全削除
+            // =========================
+            const commentsRef = collection(
+              db,
+              "class_logs_summary",
+              docId,
+              "comments",
+            );
+
+            const commentsSnapshot = await getDocs(commentsRef);
+
+            for (const commentDoc of commentsSnapshot.docs) {
+              await deleteDoc(commentDoc.ref);
+            }
+
+            // =========================
+            // 親ドキュメント削除
+            // =========================
+            await deleteDoc(doc(db, "class_logs_summary", docId));
+
+            alert("授業ページを削除しました");
+
+            // 画面リセット
+            summaryBox.textContent =
+              "授業名と回数を選択すると、ここに要約が表示されます。";
+
+            commentsContainer.textContent =
+              "授業名と回数を選択すると、コメントが表示されます。";
+
+            countSelect.innerHTML =
+              '<option value="">-- 回数を選択してください --</option>';
+
+            // 授業一覧更新
+            await setupClassSelect();
+          } catch (error) {
+            console.error("削除エラー:", error);
+            alert("削除に失敗しました");
+          }
+        });
+    </script>
+  </body>
+</html>
