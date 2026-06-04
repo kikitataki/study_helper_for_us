@@ -10,6 +10,7 @@ else {
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'ja-JP';
+    let canlistening = false;
     //ここがマイク起動したときのイベント
     recognition.onstart = () => {
         console.log("音声認識中");
@@ -47,6 +48,10 @@ else {
     };
     //音声認識が終了（切断）したときの処理
     recognition.onend = () => {
+        if (!canlistening) {
+            console.log("明示的にストップされたため、再起動はしません。");
+            return;
+        }
         console.log("音声認識が終了しました。1秒後再起動したい");
         // 💡 1秒（1000ミリ秒）待ってから再起動することで、ブラウザがフリーズする無限ループを防ぎます
         setTimeout(() => {
@@ -59,6 +64,35 @@ else {
             }
         }, 1000);
     };
-    console.log("音声認識yes");
-    recognition.start();
+    window.toggleRecognition = function () {
+        const btn = document.getElementById("toggle-recognition-btn");
+        if (!canlistening) {
+            // 🛑 停止中 ➔ 🚀 開始
+            canlistening = true;
+            try {
+                recognition.start();
+                if (btn) {
+                    btn.textContent = "録音を中断する";
+                    btn.style.backgroundColor = "#dc3545"; // 赤色に変更
+                }
+            }
+            catch (e) {
+                console.error("開始エラー:", e);
+            }
+        }
+        else {
+            // 🚀 動作中 ➔ 🛑 停止
+            canlistening = false; // 💡 先にフラグを折ることでonendの自動再起動を防ぐ
+            try {
+                recognition.stop();
+                if (btn) {
+                    btn.textContent = "録音を開始する";
+                    btn.style.backgroundColor = "#28a745"; // 緑色に変更
+                }
+            }
+            catch (e) {
+                console.error("停止エラー:", e);
+            }
+        }
+    };
 }

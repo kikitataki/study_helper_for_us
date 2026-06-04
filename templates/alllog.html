@@ -7,59 +7,145 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
 </head>
 <body>
+    <div style="margin-bottom: 15px;">
+        <label for="class-input" style="font-weight: bold;">授業名：</label>
+        <input type="text" id="class-input" list="class-list" placeholder="選択するか入力してください" style="padding: 5px; width: 250px;">
+        
+        <datalist id="class-list">
+            <option value="実験デザイン">
+            <option value="webコンピューティング">
+            <option value="システム解析">
+            <option value="機械学習">
+            <option value="幾何学1">
+            <option value="ソフトウェア工学">
+            <option value="コンピュータグラフィックス">
+            <option value="知能情報学セミナー">
+            <option value="行動計測学">
+            <option value="画像工学">
+        </datalist>
+    </div>
+
+    <div style="margin-bottom: 15px;">
+        <label for="class-count" style="font-weight: bold;">授業回：</label>
+        <input type="number" id="class-count" min="1" max="15" value="1" style="padding: 5px; width: 60px; text-align: center;">
+        <span> 回目</span>
+    </div>
     <h1>すべてのログ</h1>
     
-    <a href="/" class="back-link">← メイン画面に戻る</a>
-    <ul id="log-list"></ul> 
+    <div style="margin-bottom: 15px;">
+        <button id="toggle-recognition-btn" onclick="toggleRecognition()" style="background-color: #28a745;">
+            録音を開始する
+        </button>
+        <button id="eraselog" style="background-color: #6c757d; color: white; margin-left: 10px;">ログをすべて削除する</button>
+    </div>
 
-    <!-- 要約ボタン -->
+    <div style="margin-bottom: 20px; padding: 15px; background-color: #f0f7ff; border: 1px solid #bde0ff; border-radius: 8px;">
+        <label for="memo-input" style="font-weight: bold; color: #0056b3; display: block; margin-bottom: 5px;">📝 板書・手入力メモの追加：</label>
+        <input type="text" id="memo-input" placeholder="黒板の文字や補足をここに入力（Enterで送信）" style="padding: 8px; width: 70%; max-width: 400px; border: 1px solid #ccc; border-radius: 4px;">
+        <button id="send-memo-btn" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 5px;">送信</button>
+    </div>
+    
+    <a href="/" class="back-link">← メイン画面に戻る</a>
+    
+    <ul id="log-list" style="margin-top: 20px;"></ul>
+    
     <button id="summarize-btn" class="btn">AIで補完しながら修正する</button>
 
     <button id="copy-btn" class="btn" style="display: none; margin-left: 10px; background-color: #4CAF50; color: white;">
         結果をコピー
     </button>
+    <button id="output-btn" class="btn" style="display: none; margin-left: 10px">DBに追加する</button>
 
-    <!--結果を表示する場所 -->
     <div id="summary-result" style="margin-top: 10px; padding: 10px; border-radius: 5px; background: #f4f4f4; min-height: 20px;"></div>
 
     <script>
-        //ログの取得と表示
+        //ログをpythonから取得する関数
         function fetchAndShowLogs() {
-            fetch('/api/logs')
-                .then(response => response.json())
+            fetch('/api/logs')//api/logにアクセスする
+                .then(response => response.json())//json形式の文字列をjsonに変換する
                 .then(data => {
                     const listElement = document.getElementById('log-list');
-                    listElement.innerHTML = '';
+                    listElement.innerHTML = ''; //掲示場所の初期化
                     data.forEach(log => {
-                        const li = document.createElement('li');
+                        const li = document.createElement('li'); //liのタグを作成する
                         li.textContent = log.timestamp + " - " + log.text;
-                        listElement.appendChild(li);
+                        listElement.appendChild(li); //掲示板に追加する
                     });
                 });
         }
+        
+        //5秒ごとにログを更新する   
         setInterval(fetchAndShowLogs, 5000);
         fetchAndShowLogs();
 
         //補完機能
         const summarizeBtn = document.getElementById('summarize-btn');
         const copyBtn = document.getElementById('copy-btn'); 
+        const addBtn = document.getElementById('output-btn');
+        const eraseBtn = document.getElementById('eraselog');
         const resultElement = document.getElementById('summary-result');
+
+        // ✨ 手入力用要素の取得
+        const memoInput = document.getElementById('memo-input');
+        const sendMemoBtn = document.getElementById('send-memo-btn');
 
         summarizeBtn.addEventListener('click', function() {
             resultElement.textContent = "補完中..."; 
             copyBtn.style.display = "none"; 
+            addBtn.style.display = "none";
             fetchSummaryFromPython();
         });
 
+        eraseBtn.addEventListener('click',function(){
+            eraseBtn.textContent = "削除しています...";
+            fetcherasePython();
+        });
+
+        function fetcherasePython(){
+            fetch('/eraselog',{
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === "ok") {
+                    eraseBtn.textContent = "削除完了！";
+                    fetchAndShowLogs(); 
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                eraseBtn.textContent = "削除失敗";
+            });
+        }
+
         function fetchSummaryFromPython() {
-            fetch('/api/youyaku')
+            let can = true;
+            const classInputElement = document.getElementById('class-input');
+            const classCountElement = document.getElementById('class-count');
+            let className;
+            if (classInputElement && classInputElement.value) {
+                className = classInputElement.value; 
+            } else {
+                className = '未設定'; 
+                can = false;
+            }
+            if(!classCountElement) can = false;
+
+            fetch('/api/youyaku', {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({
+                    className: className 
+                })
+            })
                 .then(response => response.json())
                 .then(data => {
                     resultElement.textContent = data.summary; 
-                    
-                    //追加: 要約が終わったらコピーボタンを表示する
                     if(data.summary) {
                         copyBtn.style.display = "inline-block";
+                        if(can) addBtn.style.display = "inline-block";
                     }
                 })
                 .catch(error => {
@@ -73,10 +159,9 @@
             const textToCopy = resultElement.textContent;
 
             navigator.clipboard.writeText(textToCopy).then(() => {
-                // ボタンの文字を一時的に変えて「コピーした感」を出す
                 const originalText = copyBtn.textContent;
                 copyBtn.textContent = "コピー完了！";
-                copyBtn.style.backgroundColor = "#2e7d32"; // 少し暗い緑に
+                copyBtn.style.backgroundColor = "#2e7d32"; 
 
                 setTimeout(() => {
                     copyBtn.textContent = originalText;
@@ -86,6 +171,93 @@
                 alert("コピーに失敗しました");
             });
         });
+
+        // 💡 「DBに追加する」ボタンのクリックイベント
+        addBtn.addEventListener('click', function() {
+            const classInputElement = document.getElementById('class-input');
+            const classCountElement = document.getElementById('class-count');
+            
+            const className = classInputElement ? classInputElement.value.trim() : '未設定';
+            const classCount = classCountElement ? classCountElement.value : '1';
+            const summaryText = resultElement.textContent;
+
+            addBtn.disabled = true;
+            const originalText = "DBに追加する"; 
+            const originalBgColor = addBtn.style.backgroundColor; 
+            addBtn.textContent = "保存中...";
+
+            fetch('/api/save_log', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    className: className,
+                    classCount: classCount,
+                    summary: summaryText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Firebaseへ正常に保存されました！");
+                    addBtn.textContent = "保存完了！";
+                    addBtn.style.backgroundColor = "#2e7d32"; 
+
+                    setTimeout(() => {
+                        addBtn.disabled = false;            
+                        addBtn.textContent = originalText;   
+                        addBtn.style.backgroundColor = originalBgColor; 
+                    }, 3000); 
+
+                } else {
+                    alert("保存に失敗しました: " + data.message);
+                    addBtn.disabled = false;
+                    addBtn.textContent = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('保存エラー:', error);
+                alert("通信エラーが発生しました。");
+                addBtn.disabled = false;
+                addBtn.textContent = originalText;
+            });
+        });
+
+        // ===================================================
+        // ✨【新機能】手入力メモをPythonへ送信するロジック
+        // ===================================================
+        function sendManualMemo() {
+            const text = memoInput.value.trim();
+            if (!text) return; // 空っぽなら何もしない
+
+            // listen.tsでマイク音声を送っているのと同じエンドポイントへ流す
+            fetch('/send_voice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: "[手入力メモ] " + text // 💡 AIが「人間が手で打った重要事項」だと識別しやすいようにヘッダーを付与
+            })
+            .then(response => {
+                if (response.ok) {
+                    memoInput.value = ""; // 送信が成功したら入力欄をクリア
+                    fetchAndShowLogs();   // 即座にログ一覧を再読み込みして画面に反映
+                }
+            })
+            .catch(error => {
+                console.error("メモの送信エラー:", error);
+            });
+        }
+
+        // ボタンクリックで送信
+        sendMemoBtn.addEventListener('click', sendManualMemo);
+
+        // 入力欄でEnterキーが押されたときも送信する親切設計
+        memoInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                sendManualMemo();
+            }
+        });
+
     </script>
     <script src="{{ url_for('static', filename='js/listen.js') }}"></script>
 </body>
