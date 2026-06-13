@@ -1522,7 +1522,7 @@
               selectItem(item);
             });
 
-            li.addEventListener("touchstart", (e) => {
+            li.addEventListener("touchend", (e) => {
               e.preventDefault();
               selectItem(item);
             });
@@ -1540,7 +1540,7 @@
 
           // input の位置を取得して list を直下に配置
           const rect = input.getBoundingClientRect();
-          list.style.top = rect.bottom + window.scrollY + "px";
+          list.style.top = rect.bottom + "px";
           list.style.left = rect.left + "px";
           list.style.width = rect.width + "px";
 
@@ -1551,17 +1551,20 @@
           wrap.classList.remove("open");
         }
 
-        input.addEventListener("focus", open);
-        input.addEventListener("touchstart", () => {
-          setTimeout(open, 50); // スマホタップ時に少し遅らせて開く
+        input.addEventListener("pointerdown", (e) => {
+          open();
         });
+        input.addEventListener("touchend", (e) => {
+          e.preventDefault(); // スマホのダブルイベント防止
+          open();
+        });
+
         input.addEventListener("input", () => {
           open();
-          updateCountSelect();
         });
 
         input.addEventListener("blur", () => {
-          setTimeout(close, 400);
+          setTimeout(close, 600);
         });
 
         input.addEventListener("keydown", (e) => {
