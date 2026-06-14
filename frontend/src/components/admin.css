@@ -1,0 +1,57 @@
+.admin-zone {
+  margin-top: 20px;
+}
+
+.admin-notification-box {
+  display: none;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.admin-toggle-btn {
+  background-color: #6c757d;
+  color: white;
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-content {
+  background: #fff3cd;
+  padding: 15px;
+  border: 1px solid #ffeeba;
+  border-radius: 0 0 12px 12px;
+  margin-top: -2px;
+  box-sizing: border-box;
+}
+
+.admin-card {
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.admin-card-title {
+  font-size: 13px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.flex-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
