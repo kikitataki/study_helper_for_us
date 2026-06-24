@@ -1,0 +1,46 @@
+/*classselect.css*/
+.combo-wrap {
+  position: relative;
+}
+
+.combo-input {
+  width: 100%;
+}
+
+.combo-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+}
+
+.combo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.class-combo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.favorite-btn {
+  width: auto;
+  padding: 4px 8px;
+  background: transparent;
+  color: #f5a400;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.favorite-current-btn {
+  margin: 10px 0 16px;
+  width: auto;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}

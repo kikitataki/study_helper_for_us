@@ -1,9 +1,9 @@
+/* components/admin.css */
 .admin-zone {
   margin-top: 20px;
 }
 
 .admin-notification-box {
-  display: none;
   background: #fff3cd;
   border: 1px solid #ffeeba;
   padding: 15px;

@@ -1,0 +1,39 @@
+/*comment.css*/
+.comments-container {
+  margin-bottom: 15px;
+}
+
+.comment-form {
+  display: block;
+  margin-top: 15px;
+}
+
+.comment-form input,
+.comment-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+.comment-form textarea {
+  resize: vertical;
+}
+
+.comment-form button {
+  width: 100%;
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.comment-actions button {
+  display: inline-block;
+  width: auto;
+  padding: 6px 12px;
+  font-size: 14px;
+}

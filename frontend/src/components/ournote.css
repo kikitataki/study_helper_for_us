@@ -1,0 +1,102 @@
+.mobile-patch-zone {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.delete-summary-btn {
+  display: inline-block;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #dc3545;
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.patch-title {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #495057;
+}
+
+.patch-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+}
+
+.patch-input {
+  flex: 1;
+  min-width: 280px;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.patch-submit-btn {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.patch-note {
+  color: #6c757d;
+  display: block;
+  margin-top: 8px;
+}
+
+.custom-heading {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #111;
+  margin-top: 25px;
+  margin-bottom: 12px;
+  padding-left: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.custom-strong {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #222;
+  background: linear-gradient(transparent 60%, #fff3cd 60%);
+  padding: 0 2px;
+}
+
+.custom-del {
+  color: #999;
+  text-decoration: line-through;
+  font-size: 0.9em;
+}
+
+.custom-list {
+  display: inline-block;
+  color: #007bff;
+  font-weight: bold;
+  margin-right: 6px;
+  transform: scale(1.3);
+}
+#summary-box {
+  white-space: pre-wrap;
+  text-align: left;
+  line-height: 1.8;
+  background: #ffffff;
+  color: #333;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+  margin-bottom: 20px;
+}

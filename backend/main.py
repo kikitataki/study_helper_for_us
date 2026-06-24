@@ -7,11 +7,11 @@ from dotenv import load_dotenv
 import threading
 import webbrowser
 import sys
-# ➔ 元からあるインポートの下あたりに追加してください
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from firebase_admin import auth
+from flask_cors import CORS
 
 def get_resource_path(relative_path):
     if getattr(sys, 'frozen', False):
@@ -35,7 +35,37 @@ firebase_admin.initialize_app(cred)
 # 🗄️ Firestore データベースを操作するための「クライアント」を作成
 db = firestore.client()
 client = genai.Client(api_key= os.getenv("GEMINI_API_KEY"))
+client_backup = genai.Client(api_key=os.getenv("GEMINI_API_KEY2"))
 
+GEMINI_MODELS = [
+    "gemini-flash-latest",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite"
+]
+
+def generate_gemini_text(prompt):
+    clients = [
+        ("API_KEY1", client),
+        ("API_KEY2", client_backup)
+    ]
+
+    last_error = None
+
+    for key_name, gemini_client in clients:
+        for model_name in GEMINI_MODELS:
+            try:
+                response = gemini_client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                )
+                print(f"{key_name} / {model_name} 成功")
+                return response.text
+
+            except Exception as e:
+                print(f"{key_name} / {model_name} 失敗: {e}")
+                last_error = e
+
+    raise Exception(f"全APIキー・全モデルで失敗: {last_error}")
 
 keywords = {"授業中", "課題", "テスト", "レポート", "終了", "提出", "締め切り", "教授", "成績", "単位","大事"}
 alllogs = []
@@ -49,7 +79,7 @@ app = Flask(
     template_folder=get_resource_path('templates'),
     static_folder=get_resource_path('static')
 )
-
+CORS(app)
 
 
 
@@ -143,7 +173,7 @@ def get_important_logs_json():
 
 # @app.route("/register")
 # def register():
-#     return render_template("register.html")
+#     return render_template("register")
 
 
 def prepare_text_for_gemini(alllogs):
@@ -172,12 +202,7 @@ def call_gemini_api(alllogs, class_name):
     --- ログ内容 ---
     {target_text}
     """
-    response = client.models.generate_content(
-        model="gemini-flash-latest",
-        contents=prompt,
-    )
-    return response.text
-    
+    return generate_gemini_text(prompt)
 
 @app.route('/send_voice', methods=['POST'])
 def receive_voice():
@@ -191,6 +216,63 @@ def receive_voice():
     alllogs.append({"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "text": spoken_text})
     return "Received", 200
 
+@app.route('/api/polish_lecture', methods=['POST'])
+def polish_lecture():
+    data = request.get_json() or {}
+    class_name = data.get("className", "").strip()
+    lecture_text = data.get("text", "").strip()
+
+    if not class_name or not lecture_text:
+        return jsonify({
+            "status": "error",
+            "message": "授業名と本文が必要です"
+        }), 400
+
+    prompt = f"""
+あなたは大学の講義ノートを整理する優秀なアシスタントです。
+
+以下の授業メモを、復習しやすい講義ノートとして要約・整理してください。
+
+【★最重要：レイアウトと視覚的階層のルール】
+1. 大見出し：
+行頭には必ず「1. 」「2. 」「3. 」のように数字＋ドット＋半角スペースを使ってください。
+
+2. 通常の解説文：
+行頭に「- 」を付けず、通常の文章として記述してください。
+
+3. 箇条書き：
+特徴・メリット・デメリットなどを並べる時だけ「- 」を使ってください。
+
+4. 重要キーワード：
+重要語句は **重要語句** のように ** で囲んでください。
+
+5. 訂正・変更情報：
+不要な情報は ~~古い説明~~ のように ~~ で囲んでください。
+
+【出力形式】
+前置きや挨拶は不要です。いきなり「1. 〇〇」から始めてください。
+
+【授業名】
+{class_name}
+
+【授業メモ】
+{lecture_text}
+"""
+
+    try:
+        polished_text = generate_gemini_text(prompt)
+
+        return jsonify({
+            "status": "success",
+            "text": polished_text
+        })
+
+    except Exception as e:
+        print("講義ノート化エラー:", e)
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 
 @app.route('/api/youyaku', methods=['POST']) # ← methods=['POST'] を追加！
@@ -284,28 +366,23 @@ def save_log():
 --- 個人の補完データ（今回追加するデータ） ---
 {summary_text}
         """
-            
         try:
-            # 💡 clientのインポートや初期化がmain.pyの上部で行われている前提です
-            response = client.models.generate_content(
-                model="gemini-flash-latest",
-                contents=prompt,
-            )
-            if response.text:
-                updated_summary = response.text
+            updated_summary = generate_gemini_text(prompt)
+
         except Exception as gemini_err:
             print(f"Gemini合体APIエラー: {gemini_err}")
-            # 今回は合体に失敗したので、過去のデータを消さないために「過去データ」をそのまま維持する安全策
             updated_summary = past_summary
 
-        # 最新の和集合データを組み立てて保存
+
+        # ← try-except の外
+
         summary_data = {
             "className": class_name,
             "classCount": int(class_count),
             "summary": updated_summary,
             "updatedAt": datetime.now()
         }
-        # .set() で上書き、または新規作成
+
         doc_ref.set(summary_data)
 
         print(f"Firestore保存完了! [個人履歴追加] & [全体和集合更新: {doc_id}]")
@@ -374,13 +451,7 @@ def api_patch_summary():
 --- 現在の要約ノート（修正前） ---
 {current_summary}
 """
-
-        # 3. ✨ Gemini API で修正版の要約を生成 (最新のSDKの書き方に修正)
-        response = client.models.generate_content(
-            model="gemini-flash-latest",
-            contents=prompt,
-        )
-        updated_summary = response.text
+        updated_summary = generate_gemini_text(prompt)
 
         # 4. 生成された新しい要約で Firestore を上書き保存
         doc_ref.set({

@@ -1,0 +1,79 @@
+
+.menu {
+  position: fixed;
+  top: 0;
+  right: -280px;
+  width: 280px;
+  height: 100%;
+  background: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.15);
+  transition: right 0.3s;
+  z-index: 1000;
+}
+
+.menu.open {
+  right: 0;
+}
+
+.menu ul {
+  list-style: none;
+  padding: 80px 20px 20px;
+}
+
+.menu li {
+  padding: 20px 0;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+}
+.menu-user-box {
+  margin-top: 70px;
+  padding: 0 20px 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.menu-user-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.menu-user-email {
+  font-size: 14px;
+  color: #666;
+  word-break: break-all;
+}
+.menu a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+}
+
+.hamburger {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 32px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.hamburger span {
+  display: block;
+  height: 3px;
+  background: #333;
+  margin: 6px 0;
+  transition: 0.3s;
+}
+
+.hamburger.active span:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -7px);
+}

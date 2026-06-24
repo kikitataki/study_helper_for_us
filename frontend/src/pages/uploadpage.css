@@ -1,0 +1,14 @@
+.summary-preview {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.preview-box {
+  white-space: pre-wrap;
+  background: #ffffff;
+  color: #333;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+  line-height: 1.8;
+}

@@ -387,12 +387,10 @@
     </div>
 
     <div id="register-link-box" style="margin-top: 15px; text-align: center">
-      <a href="https://stady-for-us.web.app/register.html">
-        新規登録はこちら
-      </a>
+      <a href="https://stady-for-us.web.app/register"> 新規登録はこちら </a>
     </div>
 
-    <!-- 授業選択画面  -->
+    <!-- 授業選択画面（移行済み）  -->
     <div id="app-content" style="display: none">
       <h1>授業毎の要約 ＆ 掲示板</h1>
 
@@ -813,7 +811,7 @@
       const uploadFileBtn = document.getElementById("upload-file-btn");
       const fileNameDisplay = document.getElementById("file-name-display");
 
-      //ファイル挿入等でのイベント
+      //ファイル挿入等でのイベント（使用不可）
       fileInput.addEventListener("change", () => {
         //ファイルがあったときの操作
         if (fileInput.files.length > 0) {
@@ -826,6 +824,7 @@
         }
       });
 
+      //ファイルのアップロードボタンが押されたときのイベント（使用不可）
       uploadFileBtn.addEventListener("click", async () => {
         /* ファイルダウンロードを試みたが、無料では厳しかったので削除
         try {
@@ -904,37 +903,32 @@
         );
       }
 
-      //ログイン関連
+      //ログイン関連(hooksのuserAuthに移動済み)
       onAuthStateChanged(auth, async (user) => {
         // auth（認証状態から）user情報を取得する
+        // userがnullじゃない→認証済み
+        // ログイン状態ならuserにオブジェクトが入る
         if (user) {
           try {
-            // 🔥 追加：認証トークンの復元完了まで待つ
+            //認証トークンの復元完了まで待つ
             await user.getIdToken();
-
-            // nullじゃない→認証済み
             document.getElementById("register-link-box").style.display = "none";
 
-            console.log("ログイン認証済み:", user.email);
-
+            console.log("ログイン完了", user.email);
             document.getElementById("login-box").style.display = "none";
 
             document.getElementById("app-content").style.display = "block";
 
             // 管理者なら
             if (user.email === ADMIN_EMAIL) {
-              console.log("⚡ 管理者としてログインしました");
-
+              console.log("管理者");
               document.getElementById("admin-zone").style.display = "block";
-
               document.getElementById("delete-summary-btn").style.display =
                 "block";
 
-              // 🔄 アコーディオンの開閉イベントを追加
+              //
               const toggleBtn = document.getElementById("admin-toggle-btn");
-
               const adminContent = document.getElementById("admin-content");
-
               const toggleArrow = document.getElementById("admin-toggle-arrow");
 
               if (toggleBtn && !toggleBtn.dataset.listenerAdded) {
@@ -962,7 +956,6 @@
               await loadRegisterRequests();
             }
 
-            // 🔥 最後に起動
             startYourApp();
           } catch (error) {
             console.error("認証復元エラー:", error);
@@ -984,7 +977,7 @@
         }
       });
 
-      //メールアドレスからユーザー名を取得するヘルパー関数
+      //メールアドレスからユーザー名を取得するヘルパー関数(service/userService.jsに移動済み)
       async function getUserName(email) {
         if (!email) return "ゲスト";
         try {
@@ -1039,6 +1032,49 @@
           userListContainer.textContent = "一覧の取得に失敗しました。";
         }
       }
+      // ========================================
+      // 元の loadAllUsers() を React向けに移植
+      //
+      // 【移植前】
+      // admin.jsx の中で
+      // ・Firestoreからユーザー一覧取得
+      // ・document.createElement()
+      // ・innerHTML
+      // ・appendChild()
+      // を使って画面へ直接描画していた
+      //
+      // 【移植後】
+      // services/userService.js に移動
+      //
+      // 理由：
+      // ReactではDOMを直接操作せず、
+      // Firestoreから取得したデータだけ返すようにするため。
+      //
+      // 描画処理は Admin.jsx 側の
+      // users.map(...) が担当する。
+      //
+      // 処理の流れ
+      //
+      // Firestore(users)
+      //        ↓
+      // loadAllUsers()
+      //        ↓
+      // ユーザー配列を返す
+      //        ↓
+      // setUsers()
+      //        ↓
+      // users.map()
+      //        ↓
+      // Reactが自動描画
+      //
+      // 元コードで使用していた
+      // document.getElementById()
+      // createElement()
+      // innerHTML
+      // appendChild()
+      // は不要になる。
+      // ========================================
+
       //Firebaseから申請一覧を読み込み、htmlに反映するまで
       async function loadRegisterRequests() {
         const box = document.getElementById("admin-notification-box");
@@ -1131,6 +1167,35 @@
         }
       };
 
+      // ========================================
+      // register_requests の React移植
+      //
+      // 【移植前】
+      // ・loadRegisterRequests() が
+      //   Firestore取得 + HTML生成 を担当
+      // ・document.getElementById()
+      // ・createElement()
+      // ・appendChild()
+      // ・onclick="rejectUser()"
+      // を使用
+      //
+      // 【移植後】
+      // ・Firestore処理を
+      //   services/adminService.js に移動
+      // ・loadRegisterRequests()
+      // ・rejectUser()
+      // をサービス関数として実装
+      //
+      // ・Admin.jsx では
+      //   useState()で申請一覧を管理
+      // ・useEffect()で初回読み込み
+      // ・requests.map()で画面表示
+      // ・onClick()で申請拒否を実行
+      //
+      // Reactの考え方に合わせて
+      // 「データ取得」と「画面描画」を分離した。
+      // ========================================
+
       window.approveUser = async function (email) {
         try {
           const requestRef = doc(db, "register_requests", email);
@@ -1185,6 +1250,52 @@
         }
       };
 
+      // ========================================
+      // approveUser() の React移植
+      //
+      // 【移植前】
+      // ・window.approveUser()
+      // ・onclick="approveUser(...)"
+      // で実行
+      //
+      // 処理内容
+      // ・register_requests から申請情報取得
+      // ・Flask(API)へAuth作成依頼
+      // ・usersコレクションへ登録
+      // ・register_requestsから削除
+      // ・一覧を再読み込み
+      //
+      // 【移植後】
+      // ・approveUser() を
+      //   services/adminService.js へ移動
+      //
+      // ・Admin.jsx に
+      //   handleApproveUser() を作成
+      //
+      // ・Reactの onClick() から実行
+      //
+      // React化に伴い
+      // window関数とHTMLのonclickを廃止し、
+      // コンポーネント内イベントとして実装した。
+      //
+      // 処理の流れ
+      //
+      // 承認ボタン押下
+      //        ↓
+      // handleApproveUser()
+      //        ↓
+      // adminService.approveUser()
+      //        ↓
+      // FlaskへAuth作成依頼
+      //        ↓
+      // usersへ登録
+      //        ↓
+      // 申請データ削除
+      //        ↓
+      // 一覧再取得(fetchUsers)
+      // 一覧再取得(fetchRegisterRequests)
+      // ========================================
+
       //管理者がユーザーを追加・更新する処理
       document
         .getElementById("admin-add-user-btn")
@@ -1223,7 +1334,46 @@
             alert("ユーザーの登録に失敗しました。");
           }
         });
-
+      // ========================================
+      // 管理者によるユーザー登録・更新機能をReactへ移植
+      //
+      // 【移植前】
+      // ・addEventListener("click")
+      // ・document.getElementById()
+      // ・input.value
+      // を使用してユーザー登録を実行
+      //
+      // 【移植後】
+      // ・Firestore処理を
+      //   userService.js の
+      //   addOrUpdateUser() へ分離
+      //
+      // ・Admin.jsx では
+      //   useState()で入力値を管理
+      //
+      // ・onClick()で
+      //   handleAddOrUpdateUser() を実行
+      //
+      // React化に伴い
+      // DOM操作を廃止し、
+      // state管理へ変更した。
+      //
+      // 処理の流れ
+      //
+      // 入力欄
+      //    ↓
+      // useState(userEmail,userName)
+      //    ↓
+      // handleAddOrUpdateUser()
+      //    ↓
+      // addOrUpdateUser()
+      //    ↓
+      // Firestore(users)へ保存
+      //    ↓
+      // 入力欄クリア
+      //    ↓
+      // fetchUsers()
+      // ========================================
       // ===================================================
       //管理者がユーザーを削除する関数
       window.deleteUserFromAdmin = async function (email) {
@@ -1289,6 +1439,61 @@
           alert("メールアドレスまたはパスワードが違います。");
         }
       };
+
+      // ========================================
+      // ログイン機能をReactへ移植
+      //
+      // 【移植前】
+      // ・window.handleLogin()
+      // ・document.getElementById()
+      // ・onclick
+      // を使用してログイン処理を実行
+      //
+      // ・onAuthStateChanged() 内で
+      // 画面の表示/非表示を制御
+      //
+      // 【移植後】
+      // ・認証処理を
+      //   services/authService.js へ分離
+      //
+      // ・Login.jsx では
+      //   useState()で入力値を管理
+      //
+      // ・onClick()で
+      //   handleLogin() を実行
+      //
+      // ・認証状態の監視は
+      //   useAuth.js に集約
+      //
+      // ・画面切り替えは
+      //   App.jsx で実施
+      //
+      // React化に伴い
+      // document.getElementById()
+      // style.display
+      // onclick
+      // を廃止し、
+      // state管理と条件分岐による画面描画へ変更した。
+      //
+      // 処理の流れ
+      //
+      // メールアドレス入力
+      // パスワード入力
+      //        ↓
+      // handleLogin()
+      //        ↓
+      // authService.loginUser()
+      //        ↓
+      // Firebase Auth認証
+      //        ↓
+      // usersコレクション確認
+      //        ↓
+      // 承認済みならログイン成功
+      //        ↓
+      // useAuth() が状態変化を検知
+      //        ↓
+      // App.jsx が画面切替
+      // ========================================
 
       //独自文法（マークダウン風）をHTMLタグにいい感じに変換する関数（AI丸投げ）
       function formatSummaryText(rawText) {
@@ -1378,6 +1583,38 @@
         }
       }
 
+      // ========================================
+      // 要約表示関連処理のReact移植
+      //
+      // 【移植前】
+      // ・formatSummaryText()
+      // ・checkAndRunPendingPatches()
+      // がHTML内のscriptに存在
+      //
+      // ・summaryBox.textContent などで
+      //   DOMを直接操作
+      //
+      // 【移植後】
+      // ・formatSummaryText()
+      //   → utils/formatter.js に移動
+      //
+      // ・checkAndRunPendingPatches()
+      //   → services/summaryService.js に移動
+      //
+      // 理由：
+      // formatSummaryText は文字列加工だけを行うため
+      // utils に分離。
+      //
+      // checkAndRunPendingPatches は
+      // Firestore取得・API通信・Firestore削除を行うため
+      // services に分離。
+      //
+      // React版ではサービス関数内で
+      // 画面を直接変更せず、
+      // true / false を返して
+      // コンポーネント側で表示を更新する。
+      // ========================================
+
       //修正するシステム
       document
         .getElementById("patch-submit-btn")
@@ -1399,7 +1636,7 @@
             patchSubmitBtn.disabled = true;
             patchSubmitBtn.textContent = "保存中...";
 
-            // ⭕ 正しい変数「text」と「new Date()」を使って保存する
+            // 正しい変数「text」と「new Date()」を使って保存する
             await addDoc(collection(db, "summary_pending_requests"), {
               docId: docId,
               text: text,
@@ -1421,8 +1658,8 @@
         });
 
       function startYourApp() {
-        classSelect.addEventListener("change", updateCountSelect);
-        countSelect.addEventListener("change", loadSummaryData);
+        classSelect.addEventListener("change", updateCountSelect); //授業名が変わったら回数
+        countSelect.addEventListener("change", loadSummaryData); //回数が変わったら要約データを読み込む
         setupClassSelect();
       }
       // 要約データとコメント一覧を読み込む
@@ -1462,16 +1699,50 @@
           summaryBox.textContent = "エラーが発生しました。";
         }
       }
+      // ========================================
+      // 要約取得・修正要望保存処理のReact移植
+      //
+      // 【移植前】
+      // ・patch-submit-btn に addEventListener()
+      // ・document.getElementById()
+      // ・input.value
+      // ・summaryBox.textContent
+      // ・summaryBox.innerHTML
+      // を使って処理していた
+      //
+      // 【移植後】
+      // ・Firestore処理を
+      //   services/summaryService.js に分離
+      //
+      // ・savePendingPatch()
+      //   → 修正要望を summary_pending_requests に保存
+      //
+      // ・loadSummary()
+      //   → class_logs_summary から要約を取得
+      //
+      // ・OurNote.jsx では
+      //   useState()で修正入力と要約表示を管理
+      //
+      // React化に伴い
+      // DOM操作を廃止し、
+      // stateとpropsを使って画面を更新する形へ変更した。
+      //
+      // 注意：
+      // className と classCount は
+      // Classselect側で選択された値を
+      // App.jsx経由で OurNote に渡す必要がある。
+      // ========================================
+
       async function setupClassSelect() {
+        //授業名の取得
         try {
           const querySnapshot = await getDocs(
             collection(db, "class_logs_summary"),
           );
-
+          //Firestoreのclass_logs_summaryコレクションの全データを取得して、querySnapshot に保存する
           const classNameSet = new Set();
-
-          querySnapshot.forEach((docItem) => {
-            const data = docItem.data();
+          querySnapshot.forEach((e) => {
+            const data = e.data();
 
             if (data.className) {
               classNameSet.add(data.className);
@@ -1481,14 +1752,16 @@
           const classNames = Array.from(classNameSet);
 
           window.allClassNames = classNames;
+          // グローバル変数として保存しておく
           setupComboBox();
         } catch (error) {
           console.error("授業名取得エラー:", error);
         }
       }
+
       function setupComboBox() {
         const wrap = document.getElementById("class-combo");
-        const input = document.getElementById("class-select");
+        const classinput = document.getElementById("class-select");
         const list = document.getElementById("class-combo-list");
 
         let hiIdx = -1;
@@ -1510,7 +1783,7 @@
             li.textContent = item;
 
             function selectItem(item) {
-              input.value = item;
+              classinput.value = item;
 
               close();
 
@@ -1532,14 +1805,14 @@
         }
 
         function open() {
-          const q = input.value.trim();
+          const q = classinput.value.trim();
           const filtered = q
             ? window.allClassNames.filter((v) => v.includes(q))
             : window.allClassNames;
           render(filtered);
 
-          // input の位置を取得して list を直下に配置
-          const rect = input.getBoundingClientRect();
+          // classinput の位置を取得して list を直下に配置
+          const rect = classinput.getBoundingClientRect();
           list.style.top = rect.bottom + "px";
           list.style.left = rect.left + "px";
           list.style.width = rect.width + "px";
@@ -1551,23 +1824,23 @@
           wrap.classList.remove("open");
         }
 
-        input.addEventListener("pointerdown", (e) => {
+        classinput.addEventListener("pointerdown", (e) => {
           open();
         });
-        input.addEventListener("touchend", (e) => {
+        classinput.addEventListener("touchend", (e) => {
           e.preventDefault(); // スマホのダブルイベント防止
           open();
         });
 
-        input.addEventListener("input", () => {
+        classinput.addEventListener("input", () => {
           open();
         });
 
-        input.addEventListener("blur", () => {
+        classinput.addEventListener("blur", () => {
           setTimeout(close, 600);
         });
 
-        input.addEventListener("keydown", (e) => {
+        classinput.addEventListener("keydown", (e) => {
           const items = list.querySelectorAll(".combo-item");
 
           if (e.key === "ArrowDown") {
@@ -1581,7 +1854,7 @@
           } else if (e.key === "Enter" && hiIdx >= 0) {
             e.preventDefault();
 
-            input.value = items[hiIdx].textContent;
+            classinput.value = items[hiIdx].textContent;
 
             close();
 
@@ -1595,6 +1868,42 @@
           });
         });
       }
+      // ========================================
+      // 授業名コンボボックスのReact移植
+      //
+      // 【移植前】
+      // ・setupClassSelect()
+      // ・setupComboBox()
+      // で授業名一覧の取得と候補表示を実行
+      //
+      // ・window.allClassNames に授業名を保存
+      // ・document.getElementById()
+      // ・createElement()
+      // ・addEventListener()
+      // ・classList.add/remove()
+      // を使用してDOMを直接操作
+      //
+      // 【移植後】
+      // ・Firestoreから授業名一覧を取得する処理を
+      //   services/classService.js の loadClassNames()
+      //   に分離
+      //
+      // ・ClassSelector.jsx では
+      //   useState()で以下を管理
+      //   - 入力中の授業名
+      //   - 授業名一覧
+      //   - 絞り込み候補
+      //   - 候補リストの開閉
+      //   - キーボード選択位置
+      //
+      // ・候補表示は
+      //   filteredClassNames.map()
+      //   で描画
+      //
+      // React化に伴い
+      // DOM操作とグローバル変数を廃止し、
+      // stateによる画面更新へ変更した。
+      // ========================================
 
       async function updateCountSelect() {
         const selectedClass = classSelect.value;
@@ -1645,9 +1954,7 @@
         }
       }
 
-      // ===================================================
-      // 💬 コメントを読み込んで表示する関数
-      // ===================================================
+      //コメントを読み込んで表示する関数
       async function loadComments(docId) {
         commentsContainer.innerHTML = "";
         try {
@@ -1666,7 +1973,7 @@
             return;
           }
 
-          // 👑 現在ログインしているユーザーが管理者かどうかをチェック
+          // 現在ログインしているユーザーが管理者かどうかをチェック
           const currentUser = auth.currentUser;
           const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
 
@@ -1675,16 +1982,16 @@
             const data = docSnap.data();
             const commentId = docSnap.id; // 削除時に必要なドキュメントID
 
-            // 📝 保存されている「入力されたニックネーム」を取得
+            //  保存されている「入力されたニックネーム」を取得
             const displayedName =
               data.inputName || data.userName || "名無しさん";
-            // 🔐 保存されている「投稿者のメールアドレス」を取得
+            // 保存されている「投稿者のメールアドレス」を取得
             const commenterEmail = data.userEmail || "guest@example.com";
 
-            // 👤 表示する名前を定義する変数
+            // 表示する名前を定義する変数
             let userDisplayName = displayedName;
 
-            // 👑 もし「管理者」としてログインしているなら、表示を拡張する
+            // もし「管理者」としてログインしているなら、表示を拡張する
             if (isAdmin) {
               // データベース（usersコレクション）から登録された本名（例: 佐藤）を取得
               const realName = await getUserName(commenterEmail);
@@ -1693,7 +2000,7 @@
               const resolvedRealName =
                 realName !== commenterEmail ? realName : "名無しさん";
 
-              // 🏷️ 管理者用フォーマット： tmp（佐藤:メールアドレス） に整形
+              //  管理者用フォーマット： tmp（佐藤:メールアドレス） に整形
               userDisplayName = `${displayedName}（${resolvedRealName}:${commenterEmail}）`;
             }
 
@@ -1749,6 +2056,35 @@
           commentsContainer.textContent = "コメントの読み込みに失敗しました。";
         }
       }
+      // ========================================
+      // updateCountSelect() と loadComments() のReact移植
+      //
+      // 【移植前】
+      // ・授業名や回数を document.getElementById() で取得
+      // ・select.innerHTML や createElement() で回数を追加
+      // ・commentsContainer.innerHTML でコメント欄を直接更新
+      // ・onclick でいいね/削除処理を呼び出し
+      //
+      // 【移植後】
+      // ・回数取得処理を classService.js の
+      //   loadClassCounts() へ分離
+      //
+      // ・コメント取得処理を commentService.js の
+      //   loadComments() へ分離
+      //
+      // ・ClassSelector.jsx では
+      //   useState() と props により
+      //   className / classCount を管理
+      //
+      // ・コメント表示は
+      //   comments.map() によるReact描画へ変更予定
+      //
+      // React化に伴い、
+      // DOMを直接書き換える処理を廃止し、
+      // Firestoreから取得したデータをstateに保存して
+      // Reactが再描画する形へ変更した。
+      // ========================================
+
       window.likeComment = async function (docId, commentId) {
         try {
           const user = auth.currentUser;
@@ -1826,9 +2162,9 @@
         .getElementById("comment-submit")
         .addEventListener("click", async () => {
           const commentInput = document.getElementById("comment-input");
-          const usernameInput = document.getElementById("comment-username"); // 👈 追加
+          const usernameInput = document.getElementById("comment-username"); //追加
           const text = commentInput.value.trim();
-          const inputName = usernameInput.value.trim() || "名無しさん"; // 👈 空なら「名無しさん」にする
+          const inputName = usernameInput.value.trim() || "名無しさん"; //空なら「名無しさん」にする
 
           if (!text) return alert("コメントを入力してください。");
 
@@ -1901,6 +2237,45 @@
             document.getElementById("resources-modal").style.display = "none";
           }
         });
+      // ========================================
+      // コメント機能のReact移植
+      //
+      // 【移植前】
+      // ・window.likeComment()
+      // ・window.deleteComment()
+      // ・comment-submit の addEventListener()
+      // ・document.getElementById()
+      // ・innerHTML
+      // ・onclick
+      // を使用してコメント機能を実装
+      //
+      // 【移植後】
+      // ・Firestore処理を
+      //   services/commentService.js に分離
+      //
+      // ・likeComment()
+      //   → いいね処理
+      //
+      // ・deleteComment()
+      //   → コメント削除処理
+      //
+      // ・addComment()
+      //   → コメント投稿処理
+      //
+      // ・loadComments()
+      //   → コメント一覧取得処理
+      //
+      // ・Comment.jsx では
+      //   useState() でコメント一覧、名前、本文を管理
+      //
+      // ・useEffect() で授業選択変更時に再読み込み
+      //
+      // ・comments.map() でコメント一覧を表示
+      //
+      // React化に伴い
+      // window関数、onclick、DOM直接操作を廃止し、
+      // stateとイベントハンドラで処理する形へ変更した。
+      // ========================================
 
       async function loadResources(className, lectureCount) {
         const container = document.getElementById("resources-list-container");
@@ -2050,6 +2425,14 @@
             alert("削除に失敗しました");
           }
         });
+
+      /*
+setupComboBox
+updateCountSelect
+setupClassSelect
+ResourceModal
+checkAndRunPendingPatches
+*/
     </script>
   </body>
 </html>
