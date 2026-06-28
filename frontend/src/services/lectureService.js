@@ -45,12 +45,10 @@ export async function polishLectureText(className, lectureText) {
     }),
   });
 
-  //通信に失敗した場合はエラー
   if (!response.ok) {
     throw new Error("講義ノート化に失敗しました。");
   }
 
-  //サーバーからのレスポンスを取得
   const data = await response.json();
 
   //講義ノート化に失敗した場合はエラー

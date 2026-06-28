@@ -19,17 +19,16 @@ export default function RegisterPage() {
     }
 
     try {
-      //送信中状態にする
+      //送信中状態
       setSending(true);
 
-      //登録申請を送信
+      //登録申請
       await createRegisterRequest({
         email: email.trim(),
         name: name.trim(),
         password,
       });
 
-      //送信成功メッセージ
       alert("登録申請を送信しました。管理者の承認をお待ちください。");
 
       //入力フォームを初期化

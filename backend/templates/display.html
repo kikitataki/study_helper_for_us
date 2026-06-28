@@ -1,57 +1,68 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>音声検知</title>
     <!-- <meta http-equiv="refresh" content="10"> -->
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div style ="margin-top: 20px; border: 1px solid #ccc; padding: 10px;">
-        <h1>音声録音アプリ</h1>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div style="margin-top: 20px; border: 1px solid #ccc; padding: 10px">
+      <h1>音声録音アプリ</h1>
     </div>
-    <a href="/alllog.html">録音する</a><br>
+    <a href="/alllog.html">録音する</a><br />
     <a href="/point.html">授業の要約ページを表示する</a>
     <h1>検出するキーワード(現在この機能は停止中です)</h1>
     <ul>
-        {% for keyword in keywords %}
-            <li>{{ keyword }}</li>
-        {% endfor %}
+      {% for keyword in keywords %}
+      <li>{{ keyword }}</li>
+      {% endfor %}
     </ul>
-    <form action="/add_keyword" method="POST">    
-        <input type="text" name="new_keyword" placeholder="追加するキーワードを入力">   
-        <button type="submit">追加</button>
+    <form action="/add_keyword" method="POST">
+      <input
+        type="text"
+        name="new_keyword"
+        placeholder="追加するキーワードを入力"
+      />
+      <button type="submit">追加</button>
     </form>
-    <form action="/erase_keyword" method="POST">    
-        <input type="text" name="new_keyword" placeholder="削除するキーワードを入力">   
-        <button type="submit">削除</button>
+    <form action="/erase_keyword" method="POST">
+      <input
+        type="text"
+        name="new_keyword"
+        placeholder="削除するキーワードを入力"
+      />
+      <button type="submit">削除</button>
     </form>
-    
+
     <h1>大事そうな文章</h1>
     <ul id="important_logs"></ul>
     <script>
-        function fetchAndShowImportantLogs() {
-            fetch('/api/important_logs')
-                .then(response => response.json())
-                .then(data => {
-                    const listElement = document.getElementById('important_logs');
-                    listElement.innerHTML = ''; // 古いのを消す
-                    data.forEach(log => {
-                        const li = document.createElement('li');
-                        li.textContent = log.timestamp + " - " + log.text;
-                        listElement.appendChild(li);
-                    });
-                });
-        }
+      function fetchAndShowImportantLogs() {
+        fetch("/api/important_logs")
+          .then((response) => response.json())
+          .then((data) => {
+            const listElement = document.getElementById("important_logs");
+            listElement.innerHTML = ""; // 古いのを消す
+            data.forEach((log) => {
+              const li = document.createElement("li");
+              li.textContent = log.timestamp + " - " + log.text;
+              listElement.appendChild(li);
+            });
+          });
+      }
 
-        //5秒(5000ミリ秒)ごとに、上の関数をずっと実行し続ける
-        setInterval(fetchAndShowImportantLogs, 5000);
+      //5秒(5000ミリ秒)ごとに、上の関数をずっと実行し続ける
+      setInterval(fetchAndShowImportantLogs, 5000);
 
-        //最初の一回も即座に実行しておく
-        fetchAndShowImportantLogs();
+      //最初の一回も即座に実行しておく
+      fetchAndShowImportantLogs();
     </script>
     <script src="{{ url_for('static', filename='js/listen.js') }}"></script>
-</body>
+  </body>
 </html>
