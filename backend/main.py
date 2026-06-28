@@ -15,24 +15,21 @@ from flask_cors import CORS
 
 def get_resource_path(relative_path):
     if getattr(sys, 'frozen', False):
-        # .exe ファイルとして実行されている場合（exeが置いてある本当のフォルダ）
         base_path = os.path.dirname(sys.executable)
     else:
-        # 通常の main.py として実行されている場合（main.pyが置いてあるフォルダ）
         base_path = os.path.dirname(os.path.abspath(__file__))
 
     return os.path.join(base_path, relative_path)
 
 load_dotenv(get_resource_path(".env"))
 
-# 【追加1】Firebaseの初期設定（ダウンロードした鍵ファイルを読み込みます）
-# ※ firebase-key.json という名前にリネームしてプロジェクトフォルダに置いてある想定です
+
 cred = credentials.Certificate(
     get_resource_path("fire_basekey.json")
 )
 firebase_admin.initialize_app(cred)
 
-# 🗄️ Firestore データベースを操作するための「クライアント」を作成
+
 db = firestore.client()
 client = genai.Client(api_key= os.getenv("GEMINI_API_KEY"))
 client_backup = genai.Client(api_key=os.getenv("GEMINI_API_KEY2"))
@@ -206,7 +203,6 @@ def call_gemini_api(alllogs, class_name):
 
 @app.route('/send_voice', methods=['POST'])
 def receive_voice():
-    # 💡 送られてきた生のデータを「テキスト（文字列）」としてそのまま受け取る
     spoken_text = request.get_data(as_text=True)
     
     print(f"ブラウザから届いた生の文字列: {spoken_text}")
@@ -277,11 +273,11 @@ def polish_lecture():
 
 @app.route('/api/youyaku', methods=['POST']) # ← methods=['POST'] を追加！
 def get_summary():
-    # 💡 HTMLから送られてきたJSONデータ（授業名）を引き取る
+    #HTMLから送られてきたJSONデータ（授業名）を引き取る
     data = request.get_json() or {}
     class_name = data.get('className', '未設定').strip()
     
-    # 💡 call_gemini_apiに「class_name」を渡して呼び出す
+    #call_gemini_apiに「class_name」を渡して呼び出す
     summary = call_gemini_api(alllogs, class_name)
     return jsonify({"summary": summary})
 
@@ -299,9 +295,6 @@ def save_log():
         if not summary_text or summary_text == "補完中..." or "【エラー】" in summary_text:
             return jsonify({"status": "error", "message": "保存する文章が正しく生成されていません"}), 400
 
-        # --------------------------------------------------------
-        # 1. 【個人用フォルダ】への保存（これまでの送信履歴として蓄積）
-        # --------------------------------------------------------
         personal_data = {
             "userName": user_name,
             "className": class_name,
@@ -311,9 +304,7 @@ def save_log():
         }
         db.collection("class_logs_personal").add(personal_data)
 
-        # --------------------------------------------------------
-        # 2. 【全体用（和集合）フォルダ】への保存（上書き更新）
-        # --------------------------------------------------------
+
         doc_id = f"{class_name}_{class_count}"
         doc_ref = db.collection("class_logs_summary").document(doc_id)
         doc_snapshot = doc_ref.get()
@@ -326,7 +317,7 @@ def save_log():
 
         if doc_snapshot.exists:
             past_summary = existing_data.get("summary", "")
-            # 🔮 Gemini APIを呼び出して、新旧2つの要約の「和集合」を作る
+            #Gemini APIを呼び出して、新旧2つの要約の和集合を作る
         prompt = f"""
 あなたは大学の講義ノートを整理する優秀なアシスタントです。
 これまでの「蓄積された要約ノート」と、新しく届いた「個人の補完データ」の2つを統合し、教科書のように美しく、復習しやすいノートにアップデートしてください。
@@ -415,7 +406,7 @@ def api_patch_summary():
         else:
             return jsonify({"status": "error", "message": "元の要約データが見つかりません"}), 444
 
-        # 2. 修正・推敲専用のプロンプトを作成
+        #修正・推敲専用のプロンプトを作成
         prompt = f"""
 あなたは大学の講義ノートを美しく推敲・修正する優秀なアシスタントです。
 提示された「現在の要約ノート」に対して、ユーザーからの「修正・追記の指示」を完全に反映した、新しい最高に見やすい要約ノートを作成してください。
