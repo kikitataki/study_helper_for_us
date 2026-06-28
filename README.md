@@ -84,57 +84,6 @@ Firebase Authenticationを用いたログイン機能を実装しています。
 * Flask
 * Gemini API
 
-## ディレクトリ構成
-
-```txt
-frontend/
-├── public/
-│   ├── favicon.ico
-│   ├── apple-touch-icon-v2.png
-│   └── manifest.webmanifest
-│
-├── src/
-│   ├── components/
-│   │   ├── admin.jsx
-│   │   ├── classselect.jsx
-│   │   ├── comment.jsx
-│   │   ├── HamburgerMenu.jsx
-│   │   ├── login.jsx
-│   │   ├── NotificationBell.jsx
-│   │   └── ournote.jsx
-│   │
-│   ├── hooks/
-│   │   └── useAuth.js
-│   │
-│   ├── pages/
-│   │   ├── ContactPage.jsx
-│   │   ├── HomePage.jsx
-│   │   ├── NotificationPage.jsx
-│   │   ├── RegisterPage.jsx
-│   │   └── UploadPage.jsx
-│   │
-│   ├── services/
-│   │   ├── adminService.js
-│   │   ├── authService.js
-│   │   ├── classService.js
-│   │   ├── commentService.js
-│   │   ├── contactService.js
-│   │   ├── favoriteService.js
-│   │   ├── firebase.js
-│   │   ├── lectureService.js
-│   │   ├── notificationService.js
-│   │   ├── summaryService.js
-│   │   └── userService.js
-│   │
-│   ├── utils/
-│   │   └── formatter.js
-│   │
-│   ├── App.jsx
-│   └── main.jsx
-│
-backend/
-└── main.py
-```
 
 ## 工夫した点
 
